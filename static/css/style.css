@@ -1,0 +1,18 @@
+/* Custom styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.navbar {
+    margin-bottom: 2rem;
+}
+
+.alert {
+    margin-bottom: 1rem;
+}

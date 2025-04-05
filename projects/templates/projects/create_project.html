@@ -1,0 +1,16 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h2>Create a New Project</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ project_form.as_p }}
+    <h3>Upload Images</h3>
+    {% for form in image_formset %}
+      {{ form.as_p }}
+    {% endfor %}
+    
+    <button type="submit">Create Project</button>
+  </form>
+{% endblock %}

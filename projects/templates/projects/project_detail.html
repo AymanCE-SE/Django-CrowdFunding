@@ -1,0 +1,63 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h2>{{ project.title }}</h2>
+  <p>{{ project.details }}</p>
+  <p><strong>Category:</strong> {{ project.category }}</p>
+  <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
+  <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
+  <p><strong>Average Rating:</strong> 
+    {% if average_rating %}
+      {{ average_rating }} / 5
+    {% else %}
+      No ratings yet
+    {% endif %}
+  </p>
+
+  <!-- Project Image Slider -->
+  <div id="project-image-slider">
+    {% for image in project.images.all %}
+      <img src="{{ image.url }}" alt="{{ project.title }}">
+    {% endfor %}
+  </div>
+
+  <!-- Comments Section -->
+  <h3>Comments</h3>
+  {% if comments %}
+    <ul>
+      {% for comment in comments %}
+        <li>
+          <strong>{{ comment.user.username }}</strong>: {{ comment.text }}
+          <small>{{ comment.created_at }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No comments yet.</p>
+  {% endif %}
+
+  <!-- Donation and Comment Forms -->
+  <h3>Donate to This Project</h3>
+  <form method="post" action="{% url 'projects:donate_to_project' project.pk %}">
+    {% csrf_token %}
+    <label for="amount">Amount to Donate:</label>
+    <input type="number" name="amount" min="1" step="any" required>
+    <button type="submit">Donate</button>
+  </form>
+
+  <h3>Leave a Comment</h3>
+  <form method="post" action="{% url 'projects:add_comment' project.pk %}">
+    {% csrf_token %}
+    <textarea name="text" placeholder="Add a comment" required></textarea>
+    <button type="submit">Submit Comment</button>
+  </form>
+
+  <h3>Rate This Project</h3>
+  <form method="post" action="{% url 'projects:rate_project' project.pk %}">
+    {% csrf_token %}
+    <label for="score">Rating (1-5):</label>
+    <input type="number" name="score" min="1" max="5" required>
+    <button type="submit">Submit Rating</button>
+  </form>
+
+{% endblock %}

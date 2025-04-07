@@ -1,5 +1,5 @@
-{% extends 'base_generic.html' %}
-
+{% extends 'base.html' %}
+{% comment %} 
 {% block content %}
   <h2>Create a New Project</h2>
 
@@ -13,4 +13,70 @@
     
     <button type="submit">Create Project</button>
   </form>
+{% endblock %} {% endcomment %}
+
+
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Create a New Project</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Project Details -->
+        <div class="form-group">
+            {{ project_form.title.label_tag }}
+            {{ project_form.title }}
+            {{ project_form.title.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ project_form.details.label_tag }}
+            {{ project_form.details }}
+            {{ project_form.details.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ project_form.total_target.label_tag }}
+            {{ project_form.total_target }}
+            {{ project_form.total_target.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ project_form.start_time.label_tag }}
+            {{ project_form.start_time }}
+            {{ project_form.start_time.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ project_form.end_time.label_tag }}
+            {{ project_form.end_time }}
+            {{ project_form.end_time.errors }}
+        </div>
+
+        <!-- Tags Section -->
+        <div class="form-group">
+            <label>{{ project_form.tags.label }} (Optional)</label>
+            <div class="tags-container">
+                {{ project_form.tags }}
+            </div>
+            {{ project_form.tags.errors }}
+            <small class="form-text text-muted">{{ project_form.tags.help_text }}</small>
+        </div>
+
+        <!-- Image Upload Section -->
+        {{ image_formset.management_form }}
+        {% for form in image_formset %}
+            <div class="form-group">
+                <label>Project Image {{ forloop.counter }}</label>
+                {{ form.image }}
+                {{ form.errors }}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Create Project</button>
+    </form>
+</div>
 {% endblock %}
+

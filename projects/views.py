@@ -4,10 +4,11 @@ from django.shortcuts import render, redirect
 from .forms import ProjectForm, ProjectImageFormSet
 from django.contrib.auth.decorators import login_required
 from .models import Project, ProjectImage
-from .forms import DonationForm
+from .forms import DonationForm, CommentForm, RatingForm
 from django.shortcuts import render, get_object_or_404
 from .models import Project, Comment, Donation, Rating
 from django.db.models import Avg, Sum
+from django.contrib import messages
 
 
 ##########################################################################
@@ -47,17 +48,32 @@ def create_project(request):
         image_formset = ProjectImageFormSet(request.POST, request.FILES)
 
         if project_form.is_valid() and image_formset.is_valid():
-            project = project_form.save(commit=False)
-            project.created_by = request.user  # Assign current user as creator
-            project.save()
+            try:
+                # Save project
+                project = project_form.save(commit=False)
+                project.created_by = request.user
+                project.save()
+                
+                # Save tags if any were selected
+                if project_form.cleaned_data.get('tags'):
+                    project_form.save_m2m()
 
-            # Save images
-            for form in image_formset:
-                image = form.save(commit=False)
-                image.project = project
-                image.save()
+                # Save images
+                images = image_formset.save(commit=False)
+                for image in images:
+                    if image.image:
+                        image.project = project
+                        image.save()
 
-            return redirect('projects:project_detail', pk=project.pk)
+                messages.success(request, 'Project created successfully!')
+                return redirect('projects:project_detail', pk=project.pk)
+            except Exception as e:
+                messages.error(request, f'Error creating project: {str(e)}')
+                print(f"Error saving project: {str(e)}")
+        else:
+            messages.error(request, 'Please correct the errors below.')
+            print("Project form errors:", project_form.errors)
+            print("Image formset errors:", image_formset.errors)
     else:
         project_form = ProjectForm()
         image_formset = ProjectImageFormSet(queryset=ProjectImage.objects.none())
@@ -83,8 +99,9 @@ def donate_to_project(request, pk):
             donation.project = project
             donation.save()
 
-            # Update the project's total donation
-            project.donated_amount += donation.amount
+            # Update the project's total donation using F() to avoid race conditions
+            from django.db.models import F
+            project.donated_amount = F('donated_amount') + donation.amount
             project.save()
 
             return redirect('projects:project_detail', pk=project.pk)
@@ -130,16 +147,24 @@ def rate_project(request, pk):
         form = RatingForm(request.POST)
 
         if form.is_valid():
+            score = form.cleaned_data['score']
             rating, created = Rating.objects.get_or_create(
                 user=request.user,
-                project=project
+                project=project,
+                defaults={'score': score}  # Set initial score for new ratings
             )
-            rating.score = form.cleaned_data['score']
-            rating.save()
+            if not created:
+                rating.score = score  # Update score for existing ratings
+                rating.save()
 
             return redirect('projects:project_detail', pk=project.pk)
     else:
-        form = RatingForm()
+        # Pre-populate form with existing rating if it exists
+        try:
+            existing_rating = Rating.objects.get(user=request.user, project=project)
+            form = RatingForm(initial={'score': existing_rating.score})
+        except Rating.DoesNotExist:
+            form = RatingForm()
 
     return render(request, 'projects/rate_project.html', {
         'form': form,

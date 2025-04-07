@@ -52,13 +52,13 @@
               </a>
               <ul class="dropdown-menu">
                 <li>
-                  <a class="dropdown-item" href="">
+                  <a class="dropdown-item" href="{% url 'projects:project_list' %}">
                     <i class="fas fa-list me-2"></i>All Projects
                   </a>
                 </li>
                 {% if user.is_authenticated %}
                 <li>
-                  <a class="dropdown-item" href="">
+                  <a class="dropdown-item" href="{% url 'projects:create_project' %}">
                     <i class="fas fa-plus me-2"></i>Create Project
                   </a>
                 </li>

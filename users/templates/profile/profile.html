@@ -1,10 +1,9 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block extra_css %}
+<!-- @format -->
+
+{% extends 'base.html' %} {% load static %} {% block extra_css %}
 <link href="{% static 'css/profile.css' %}" rel="stylesheet" />
-{% endblock %}
-{% block title %}My Profile - Crowd Funding{% endblock %}
-{% block content %}
+{% endblock %} {% block title %}My Profile - Crowd Funding{% endblock %} {%block content %}
+<!-- Profile Header -->
 <div class="profile-header text-center py-1 mb-4">
   <div class="container p-4">
     <div class="mb-4 position-relative d-inline-block">
@@ -25,7 +24,7 @@
       {% endif %}
     </div>
     <h2 class="text-white mb-2">{{ user.get_full_name }}</h2>
-    <p class="lead text-white-50">{{ user.email }}</p>
+    <p class="lead text-light-50">{{ user.email }}</p>
   </div>
 </div>
 
@@ -34,7 +33,7 @@
     <!-- Profile Information -->
     <div class="col-md-4 mb-4">
       <div class="card shadow-sm h-100">
-        <div class="card-header bg-gradient gradient-primary text-white">
+        <div class="card-header bg-gradient gradient-primary text-dark">
           <h5 class="card-title text-dark mb-0">
             <i class="fas fa-user me-2"></i>Profile Information
           </h5>
@@ -48,14 +47,13 @@
             <div class="mb-3">
               <i class="fas fa-map-marker-alt me-2 text-dark"></i>
               <span
-                >{% if user.profile and user.profile.country %}{{ user.profile.country }}{% else %}Not specified{% endif %}</span
+                >{% if user.profile and user.profile.country %}{{user.profile.country }}{% else %}Not specified{% endif %}</span
               >
             </div>
             <div class="mb-3">
               <i class="fas fa-calendar me-2 text-dark"></i>
               <span>
-                {% if user.profile and user.profile.birth_date %} 
-                {{ user.profile.birth_date|date:"F d, Y" }} {% else %} Not
+                {% if user.profile and user.profile.birth_date %} {{user.profile.birth_date|date:"F d, Y" }} {% else %} Not
                 specified {% endif %}
               </span>
             </div>
@@ -83,20 +81,25 @@
     <!-- My Projects -->
     <div class="col-md-8 mb-4">
       <div class="card shadow-sm h-100">
-        <div class="card-header bg-gradient gradient-primary text-white">
+        <div class="card-header bg-gradient gradient-primary text-dark">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title text-white mb-0">
+            <h5 class="card-title text-dark mb-0">
               <i class="fas fa-project-diagram me-2"></i>My Projects
             </h5>
-            <a href="{% url 'projects:create_project' %}" class="btn btn-light btn-sm">
+            <a
+              href="{% url 'projects:create_project' %}"
+              class="btn btn-light btn-sm">
               <i class="fas fa-plus me-1"></i>New Project
             </a>
           </div>
         </div>
         <div class="card-body">
-          {% if projects %}
-          <div class="row">
-            {% for project in projects %}
+          {% if active_projects or completed_projects %}
+          <!-- Active Projects -->
+          {% if active_projects %}
+          <h6 class="card-subtitle mb-3 text-muted">Active Projects</h6>
+          <div class="row mb-4">
+            {% for project in active_projects %}
             <div class="col-md-6 mb-3">
               <div class="card h-100 shadow-sm">
                 {% if project.featured_image %}
@@ -107,9 +110,6 @@
                 {% endif %}
                 <div class="card-body">
                   <h6 class="card-title">{{ project.title }}</h6>
-                  <p class="card-text small text-muted">
-                    {{ project.description|truncatechars:100 }}
-                  </p>
                   <div class="progress mb-2 progress-slim">
                     <div
                       class="progress-bar bg-success"
@@ -121,23 +121,37 @@
                     <small class="text-muted"
                       >{{ project.progress }}% funded</small
                     >
-                    <a
-                      href="{% url 'projects:detail' project.id %}"
-                      class="btn btn-sm btn-outline-primary">
-                      View Details
-                    </a>
+                    <small class="text-muted"
+                      >{{ project.time_remaining }}</small
+                    >
                   </div>
+                  <a
+                    href="{% url 'projects:project_detail' project.id %}"
+                    class="btn btn-sm btn-outline-primary mt-2 w-100">
+                    View Details
+                  </a>
                 </div>
               </div>
             </div>
             {% endfor %}
           </div>
-          {% else %}
+          {% endif %}
+
+          <!-- Completed Projects -->
+          {% if completed_projects %}
+          <h6 class="card-subtitle mb-3 text-muted">Completed Projects</h6>
+          <div class="row">
+            {% for project in completed_projects %}
+            <!-- Similar structure as active projects but with different styling -->
+            {% endfor %}
+          </div>
+          {% endif %} {% else %}
           <div class="text-center py-4">
             <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
             <p class="text-muted">You haven't created any projects yet.</p>
-
-            <a href="{% url 'projects:create_project' %}" class="btn btn-primary">
+            <a
+              href="{% url 'projects:create_project' %}"
+              class="btn btn-primary">
               <i class="fas fa-plus me-1"></i>Create Your First Project
             </a>
           </div>
@@ -149,13 +163,25 @@
     <!-- My Donations -->
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header bg-gradient gradient-primary text-white">
-          <h5 class="card-title text-white mb-0">
-            <i class="fas fa-hand-holding-usd me-2"></i>My Donations
-          </h5>
+        <div class="card-header bg-gradient gradient-primary text-dark">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title text-dark mb-0">
+              <i class="fas fa-hand-holding-usd me-2"></i>My Donations
+            </h5>
+            {% if donation_stats %}
+            <div class="text-dark">
+              <span class="badge bg-light text-dark me-2">
+                Total: ${{ donation_stats.total_donated }}
+              </span>
+              <span class="badge bg-light text-dark">
+                Projects: {{ donation_stats.projects_supported }}
+              </span>
+            </div>
+            {% endif %}
+          </div>
         </div>
         <div class="card-body">
-          {% if donations %}
+          {% if recent_donations %}
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
@@ -163,15 +189,16 @@
                   <th>Project</th>
                   <th>Amount</th>
                   <th>Date</th>
-                  <th>Status</th>
+                  <th>Project Status</th>
                 </tr>
               </thead>
               <tbody>
-                {% for donation in donations %}
+                {% for donation in recent_donations %}
                 <tr>
                   <td>
                     <a
-                      href="{% url 'projects:detail' donation.project.id %}"
+                      {% comment %} href="{% url 'projects:donation' donation.project.id %}" {% endcomment %}
+                      href=""
                       class="text-decoration-none">
                       {{ donation.project.title }}
                     </a>
@@ -179,7 +206,11 @@
                   <td>${{ donation.amount }}</td>
                   <td>{{ donation.created_at|date:"M d, Y" }}</td>
                   <td>
-                    <span class="badge bg-success">Completed</span>
+                    {% if donation.project.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Completed</span>
+                    {% endif %}
                   </td>
                 </tr>
                 {% endfor %}

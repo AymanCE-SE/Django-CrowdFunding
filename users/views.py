@@ -11,11 +11,12 @@ User = get_user_model()
 
 @login_required
 def profile_view(request):
-    """View user's profile"""
+    user = request.user
     context = {
-        'user': request.user,
-        # 'projects': request.user.projects.all().order_by('-created_at'),
-        # 'donations': request.user.donations.all().order_by('-created_at')
+        'active_projects': user.get_active_projects(),
+        'completed_projects': user.get_completed_projects(),
+        'recent_donations': user.get_my_donations()[:5],
+        'donation_stats': user.get_donation_stats(),
     }
     return render(request, 'profile/profile.html', context)
 

@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from decimal import Decimal
 
 
 # class Category(models.Model):
@@ -22,7 +24,8 @@ class Project(models.Model):
     total_target = models.DecimalField(max_digits=10, decimal_places=2)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='created_projects'  # Add this for easier access to user's projects
     )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
@@ -30,8 +33,101 @@ class Project(models.Model):
     donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['created_at']),
+        ]
+
     def __str__(self) -> str:
         return self.title
+
+    @property
+    def progress(self):
+        """Calculate funding progress as a percentage"""
+        if self.total_target == 0:
+            return 0
+        return int((self.donated_amount / self.total_target) * 100)
+
+    @property
+    def is_active(self):
+        """Check if project is currently active"""
+        now = timezone.now()
+        return self.start_time <= now <= self.end_time
+
+    @property
+    def time_remaining(self):
+        """Calculate time remaining for the project"""
+        if self.end_time < timezone.now():
+            return "Expired"
+        delta = self.end_time - timezone.now()
+        days = delta.days
+        if days > 0:
+            return f"{days} days left"
+        hours = delta.seconds // 3600
+        return f"{hours} hours left"
+
+    def add_donation(self, user, amount):
+        """Add a donation and update the donated amount"""
+        if not self.is_active:
+            raise ValueError("This project is not active")
+        
+        donation = Donation.objects.create(
+            user=user,
+            project=self,
+            amount=amount
+        )
+        self.donated_amount += Decimal(amount)
+        self.save()
+        return donation
+
+    def get_user_donation(self, user):
+        """Get total donation amount for a specific user"""
+        return self.donations.filter(user=user).aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+
+    def get_top_donors(self, limit=5):
+        """Get top donors for the project"""
+        return self.donations.values(
+            'user__username', 'user__id'
+        ).annotate(
+            total_amount=models.Sum('amount')
+        ).order_by('-total_amount')[:limit]
+
+    def get_donation_stats(self):
+        """Get project donation statistics"""
+        return {
+            'total_donors': self.donations.values('user').distinct().count(),
+            'total_donations': self.donations.count(),
+            'average_donation': self.donations.aggregate(
+                avg=models.Avg('amount')
+            )['avg'] or 0,
+            'progress_percentage': self.progress
+        }
+
+    def get_activity_summary(self):
+        """Get project activity summary"""
+        return {
+            'total_comments': self.comments.count(),
+            'total_ratings': self.ratings.count(),
+            'average_rating': self.ratings.aggregate(
+                avg=models.Avg('score')
+            )['avg'] or 0
+        }
+
+    def is_donated_by(self, user):
+        """Check if user has donated to this project"""
+        return self.donations.filter(user=user).exists()
+
+    def get_similar_projects(self, limit=3):
+        """Get similar projects based on tags"""
+        return Project.objects.filter(
+            tags__in=self.tags.all()
+        ).exclude(
+            id=self.id
+        ).distinct()[:limit]
 
 
 class ProjectImage(models.Model):
@@ -70,6 +166,3 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"Rating by {self.user} on {self.project}"
-
-
-###############################################################################################################

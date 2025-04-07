@@ -17,11 +17,6 @@ class CustomUser(AbstractUser):
         max_length=11,
         unique=True
     )
-    profile_picture = models.ImageField(
-        upload_to='profile_pics/',
-        null=True,
-        blank=True
-    )
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'phone_number']
@@ -34,13 +29,17 @@ class CustomUser(AbstractUser):
         return f"{self.get_full_name()} ({self.email})"
 
 class Profile(models.Model):
-    # OneToOne relationship with CustomUser model
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
         related_name='profile'
     )
     
+    profile_picture = models.ImageField(  # Moved from CustomUser to Profile
+        upload_to='profile_pics/',
+        null=True,
+        blank=True
+    )
     birth_date = models.DateField(null=True, blank=True)
     facebook_profile = models.URLField(max_length=255, blank=True)
     country = models.CharField(max_length=100, blank=True)

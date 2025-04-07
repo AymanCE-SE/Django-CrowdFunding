@@ -1,0 +1,52 @@
+/* Profile Edit Page Styles */
+.card-header.gradient-header {
+    background: linear-gradient(135deg, #2e3c4b 0%, #131212 100%) ;
+}
+
+.profile-preview-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-preview-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+}
+
+.camera-button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 50%;
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Form field spacing */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+/* Button hover effects */
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Card shadow and hover effect */
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}

@@ -1,22 +1,32 @@
+<!-- @format -->
+
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Crowd Funding{% endblock %}</title>
-    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet" />
-    <!-- Custom CSS -->
-    {% load static %}
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    {% block extra_css %}{% endblock %}
   </head>
-  <body>
+  <body class="d-flex flex-column h-100">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
       <div class="container">
-        <a class="navbar-brand" href="/">Crowd Funding</a>
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-hand-holding-heart me-2"></i>
+          Crowd Funding
+        </a>
         <button
           class="navbar-toggler"
           type="button"
@@ -27,20 +37,116 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:profile' %}">Profile</a>
+              <a class="nav-link" href="/">
+                <i class="fas fa-home me-1"></i>Home
+              </a>
             </li>
-          </ul>
-          <ul class="navbar-nav">
+            <!-- Add Projects Dropdown -->
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown">
+                <i class="fas fa-project-diagram me-1"></i>Projects
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item" href="">
+                    <i class="fas fa-list me-2"></i>All Projects
+                  </a>
+                </li>
+                {% if user.is_authenticated %}
+                <li>
+                  <a class="dropdown-item" href="">
+                    <i class="fas fa-plus me-2"></i>Create Project
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="">
+                    <i class="fas fa-user-edit me-2"></i>My Projects
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="">
+                    <i class="fas fa-hand-holding-usd me-2"></i>My Donations
+                  </a>
+                </li>
+                {% endif %}
+              </ul>
+            </li>
             {% if user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+              <a class="nav-link" href="{% url 'users:profile' %}">
+                <i class="fas fa-user me-1"></i> Profile
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            {% if user.is_authenticated %}
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown">
+                {% if user.profile.profile_picture %}
+                <img
+                  src="{{ user.profile.profile_picture.url }}"
+                  class="rounded-circle me-1"
+                  width="25"
+                  height="25" />
+                {% else %}
+                <img
+                  src="{% static 'images/profile.png' %}"
+                  class="rounded-circle me-1"
+                  width="25"
+                  height="25" />
+                {% endif %} {{ user.get_full_name }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a class="dropdown-item" href="{% url 'users:profile' %}">
+                    <i class="fas fa-user me-2"></i> Profile
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'users:profile_edit' %}">
+                    <i class="fas fa-cog me-2"></i> Settings
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <form
+                    method="post"
+                    action="{% url 'users:logout' %}"
+                    class="dropdown-item p-0"
+                    id="logout-form">
+                    {% csrf_token %}
+                    <button
+                      type="button"
+                      class="dropdown-item text-danger"
+                      onclick="confirmLogout()">
+                      <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </button>
+                  </form>
+                </li>
+              </ul>
             </li>
             {% else %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">Login</a>
+              <a class="nav-link" href="{% url 'login' %}">
+                <i class="fas fa-sign-in-alt me-1"></i> Login
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:register' %}">Register</a>
+              <a class="nav-link" href="{% url 'users:register' %}">
+                <i class="fas fa-user-plus me-1"></i> Register
+              </a>
             </li>
             {% endif %}
           </ul>
@@ -48,37 +154,46 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="container py-4">
-      {% if messages %} {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-        {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"></button>
+    <!-- Messages -->
+    {% if messages %}
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+      {% for message in messages %}
+      <div class="toast show" role="alert">
+        <div
+          class="toast-header {% if message.tags %}bg-{{ message.tags }}{% endif %} text-white">
+          <strong class="me-auto">Message</strong>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">{{ message }}</div>
       </div>
-      {% endfor %} {% endif %} {% block content %}{% endblock %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-shrink-0">
+      <div class="container py-4">{% block content %}{% endblock %}</div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6">
-            <h5>Crowd Funding</h5>
-            <p>Support innovative projects and ideas.</p>
-          </div>
-          <div class="col-md-6 text-md-end">
-            <p>&copy; 2025 Crowd Funding. All rights reserved.</p>
-          </div>
-        </div>
+    <footer class="footer mt-auto py-3 bg-dark text-light">
+      <div class="container text-center">
+        <span>© {% now "Y" %} Crowd Funding. All rights reserved.</span>
       </div>
     </footer>
 
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JavaScript -->
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+    <script>
+      function confirmLogout() {
+        if (confirm("Are you sure you want to logout?")) {
+          document.getElementById("logout-form").submit();
+        }
+      }
+    </script>
+    {% endblock %}
   </body>
 </html>

@@ -1,0 +1,64 @@
+/* Register page header */
+.register-header {
+    /* background: linear-gradient(135deg, #4a90e2 0%, #7e57c2 100%); */
+    background: linear-gradient(135deg, #2e3c4b 0%, #131212 100%) ;
+
+}
+
+/* Card styling */
+.register-card {
+    border: none;
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.register-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Form styling */
+.form-control {
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #7e57c2;
+    box-shadow: 0 0 0 0.2rem rgba(126, 87, 194, 0.25);
+}
+
+/* Button styling */
+.register-btn {
+    background: linear-gradient(135deg, #283038 0%, #100329 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.register-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #357abd 0%, #6344a3 100%);
+}
+
+/* Alert styling */
+.alert {
+    border: none;
+    border-radius: 0.375rem;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+/* Help text styling */
+.form-text {
+    font-size: 0.875rem;
+}
+
+/* Invalid feedback styling */
+.invalid-feedback {
+    font-size: 0.875rem;
+    color: #dc2626;
+}

@@ -1,0 +1,52 @@
+/* Login page styles */
+.login-header {
+    /* background: linear-gradient(135deg, #4a90e2 0%, #7e57c2 100%); */
+    background: linear-gradient(135deg, #2e3c4b 0%, #131212 100%) ;
+    color: white;
+}
+
+.login-card {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.login-icon {
+    font-size: 3rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+/* Form styles */
+.form-floating>label {
+    padding-left: 2.5rem;
+}
+
+.form-floating>.form-control {
+    height: 3.5rem;
+}
+
+/* Button styles */
+.login-btn {
+    background: linear-gradient(135deg, #283038 0%, #100329 100%);
+    border: none;
+    transition: all 0.3s ease;
+    color:white;
+    margin-top: 20px;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #205080 0%, #4a317d 100%);
+}
+
+/* Animation durations */
+.animate__animated {
+    animation-duration: 0.5s;
+}
+
+/* Custom checkbox style */
+.form-check-input:checked {
+    background-color: #45257b;
+    border-color: #452778;
+}

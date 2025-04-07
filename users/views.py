@@ -12,12 +12,10 @@ User = get_user_model()
 @login_required
 def profile_view(request):
     """View user's profile"""
-    profile = Profile.objects.first()
-    
     context = {
-        'profile': profile,
-        'projects': [],  # Add empty list for now
-        'donations': []  # Add empty list for now
+        'user': request.user,
+        # 'projects': request.user.projects.all().order_by('-created_at'),
+        # 'donations': request.user.donations.all().order_by('-created_at')
     }
     return render(request, 'profile/profile.html', context)
 
@@ -25,19 +23,19 @@ def profile_view(request):
 def profile_edit(request):
     """Edit user profile"""
     if request.method == 'POST':
-        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-        
-        if profile_form.is_valid():
-            profile_form.save()
-            messages.success(request, 'Your profile has been updated!')
-            return redirect('users:profile')  # Update this line
+        form = ProfileUpdateForm(
+            request.POST,
+            request.FILES,
+            instance=request.user.profile
+        )
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('users:profile')
     else:
-        profile_form = ProfileUpdateForm(instance=request.user.profile)
+        form = ProfileUpdateForm(instance=request.user.profile)
     
-    context = {
-        'profile_form': profile_form,
-    }
-    return render(request, 'profile/profile_edit.html', context)
+    return render(request, 'profile/profile_edit.html', {'form': form})
 
 @login_required
 def delete_account(request):
@@ -61,10 +59,11 @@ from .forms import UserRegisterForm
 
 def register(request):
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST, request.FILES)
+        form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, f'Account created for {user.username}! You can now log in.')
+            # Profile is automatically created via signals
+            messages.success(request, 'Account created successfully! You can now log in.')
             return redirect('login')
     else:
         form = UserRegisterForm()

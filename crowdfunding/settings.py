@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',  
     'projects',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -138,7 +140,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Login/Logout Settings
 LOGIN_REDIRECT_URL = 'users:profile'
 LOGIN_URL = 'login'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = '/'  # Redirect to home page after logout
 
 # Custom user model
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '19ayma95@gmail.com'  
+EMAIL_HOST_PASSWORD = '01159090880'
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',
+    messages.SUCCESS: 'success',
+}

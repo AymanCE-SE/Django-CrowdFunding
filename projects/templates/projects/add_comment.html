@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Comment{% endblock %}
+
+{% block header %}
+  <h1>Add Comment</h1>
+{% endblock %}
+{% block content %}
+  <h2>Leave a Comment on {{ project.title }}</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Comment</button>
+  </form>
+{% endblock %}

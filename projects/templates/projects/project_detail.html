@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% comment %} {% extends 'base.html' %}
+
+{% block content %}
+  <h2>{{ project.title }}</h2>
+  <p>{{ project.details }}</p>
+  <p><strong>Category:</strong> {{ project.category }}</p>
+  <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
+  <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
+  <p><strong>Average Rating:</strong> 
+    {% if average_rating %}
+      {{ average_rating }} / 5
+    {% else %}
+      No ratings yet
+    {% endif %}
+  </p>
+
+  <!-- Project Image Slider -->
+  <div id="project-image-slider">
+    {% for image in project.images.all %}
+      <img src="{{ image.url }}" alt="{{ project.title }}">
+    {% endfor %}
+  </div>
+
+  <!-- Comments Section -->
+  <h3>Comments</h3>
+  {% if comments %}
+    <ul>
+      {% for comment in comments %}
+        <li>
+          <strong>{{ comment.user.username }}</strong>: {{ comment.text }}
+          <small>{{ comment.created_at }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No comments yet.</p>
+  {% endif %}
+
+  <!-- Donation and Comment Forms -->
+  <h3>Donate to This Project</h3>
+  <form method="post" action="{% url 'projects:donate_to_project' project.pk %}">
+    {% csrf_token %}
+    <label for="amount">Amount to Donate:</label>
+    <input type="number" name="amount" min="1" step="any" required>
+    <button type="submit">Donate</button>
+  </form>
+
+  <h3>Leave a Comment</h3>
+  <form method="post" action="{% url 'projects:add_comment' project.pk %}">
+    {% csrf_token %}
+    <textarea name="text" placeholder="Add a comment" required></textarea>
+    <button type="submit">Submit Comment</button>
+  </form>
+
+  <h3>Rate This Project</h3>
+  <form method="post" action="{% url 'projects:rate_project' project.pk %}">
+    {% csrf_token %}
+    <label for="score">Rating (1-5):</label>
+    <input type="number" name="score" min="1" max="5" required>
+    <button type="submit">Submit Rating</button>
+  </form>
+
+{% endblock %} {% endcomment %}
+
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Project Title and Details -->
+            <div class="project-details mb-4">
+                <h2>{{ project.title }}</h2>
+                <p>{{ project.details }}</p>
+                <p><strong>Category:</strong> {{ project.category }}</p>
+                <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
+                <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
+                <p><strong>Average Rating:</strong> 
+                    {% if average_rating %}
+                        {{ average_rating }} / 5
+                    {% else %}
+                        No ratings yet
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Project Image Slider -->
+            <div id="project-image-slider" class="carousel slide mb-4" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in project.images.all %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ image.url }}" class="d-block w-100" alt="{{ project.title }}">
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#project-image-slider" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#project-image-slider" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section mb-4">
+                <h3>Comments</h3>
+                {% if comments %}
+                    <ul class="list-group">
+                        {% for comment in comments %}
+                            <li class="list-group-item">
+                                <strong>{{ comment.user.username }}</strong>: {{ comment.text }}
+                                <small class="text-muted">{{ comment.created_at }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No comments yet.</p>
+                {% endif %}
+            </div>
+
+            <!-- Donation Form -->
+            <div class="donate-form mb-4">
+                <h3>Donate to This Project</h3>
+                <form method="post" action="{% url 'projects:donate_to_project' project.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount to Donate:</label>
+                        <input type="number" name="amount" class="form-control" min="1" step="any" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Donate</button>
+                </form>
+            </div>
+
+            <!-- Comment Form -->
+            <div class="comment-form mb-4">
+                <h3>Leave a Comment</h3>
+                <form method="post" action="{% url 'projects:add_comment' project.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea name="text" class="form-control" placeholder="Add a comment" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Comment</button>
+                </form>
+            </div>
+
+            <!-- Rating Form -->
+            <div class="rate-form mb-4">
+                <h3>Rate This Project</h3>
+                <form method="post" action="{% url 'projects:rate_project' project.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="score" class="form-label">Rating (1-5):</label>
+                        <input type="number" name="score" class="form-control" min="1" max="5" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Rating</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar or Additional Information (optional) -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Project Info</h5>
+                    <p><strong>Category:</strong> {{ project.category }}</p>
+                    <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
+                    <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
+                    <p><strong>Average Rating:</strong> 
+                        {% if average_rating %}
+                            {{ average_rating }} / 5
+                        {% else %}
+                            No ratings yet
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

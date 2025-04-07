@@ -1,0 +1,51 @@
+<!-- templates/projects/project_list.html -->
+
+{% extends 'base.html' %}
+
+{% comment %} {% block content %}
+  <h1>All Projects</h1>
+  <ul>
+    {% for project in projects %}
+      <li>
+        <!--<a href="{% url 'project_detail' pk=project.pk %}">{{ project.title }}</a> -->
+
+        <a href="{% url 'projects:project_detail' pk=project.pk %}">{{ project.title }}</a>
+
+        <!-- You can display other project details here, like description, target, etc. -->
+      </li>
+    {% empty %}
+      <p>No projects available.</p>
+    {% endfor %}
+  </ul>
+{% endblock %} {% endcomment %}
+
+
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">All Projects</h1>
+
+    {% if projects %}
+    <div class="row">
+        {% for project in projects %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="{{ project.images.first.url }}" class="card-img-top" alt="{{ project.title }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ project.title }}</h5>
+                    <p class="card-text">{{ project.details|slice:":100" }}...</p>
+                    <p class="card-text"><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
+                    <p class="card-text"><strong>Category:</strong> {{ project.category }}</p>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-primary w-100">View Project</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No projects available.</p>
+    {% endif %}
+</div>
+{% endblock %}

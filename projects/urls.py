@@ -10,4 +10,6 @@ urlpatterns = [
     path('<int:pk>/comment/', views.add_comment, name='add_comment'),
     path('<int:pk>/rate/', views.rate_project, name='rate_project'),
     path('<int:pk>/', views.project_detail, name='project_detail'),
+    path('edit/<int:pk>/', views.edit_project, name='edit_project'),
+    path('delete/<int:pk>/', views.delete_project, name='delete_project'),
 ]

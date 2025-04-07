@@ -1,82 +1,457 @@
 {% extends 'base.html' %}
-{% comment %} 
-{% block content %}
-  <h2>Create a New Project</h2>
-
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ project_form.as_p }}
-    <h3>Upload Images</h3>
-    {% for form in image_formset %}
-      {{ form.as_p }}
-    {% endfor %}
-    
-    <button type="submit">Create Project</button>
-  </form>
-{% endblock %} {% endcomment %}
-
-
+{% load static %}
 
 {% block content %}
 <div class="container py-5">
-    <h2 class="mb-4">Create a New Project</h2>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Create a New Project</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <!-- Project Details -->
-        <div class="form-group">
-            {{ project_form.title.label_tag }}
-            {{ project_form.title }}
-            {{ project_form.title.errors }}
-        </div>
+                    <form method="POST" enctype="multipart/form-data" id="createProjectForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Basic Information</h5>
+                            <div class="mb-3">
+                                {{ project_form.title.label_tag }}
+                                {{ project_form.title }}
+                                {% if project_form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ project_form.title.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
 
-        <div class="form-group">
-            {{ project_form.details.label_tag }}
-            {{ project_form.details }}
-            {{ project_form.details.errors }}
-        </div>
+                            <div class="mb-3">
+                                <label for="{{ project_form.category.id_for_label }}" class="form-label">
+                                    <i class="fas fa-folder me-2"></i>Category
+                                </label>
+                                {{ project_form.category }}
+                                {% if project_form.category.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ project_form.category.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
 
-        <div class="form-group">
-            {{ project_form.total_target.label_tag }}
-            {{ project_form.total_target }}
-            {{ project_form.total_target.errors }}
-        </div>
+                            <div class="mb-3">
+                                {{ project_form.details.label_tag }}
+                                {{ project_form.details }}
+                                {% if project_form.details.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ project_form.details.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
 
-        <div class="form-group">
-            {{ project_form.start_time.label_tag }}
-            {{ project_form.start_time }}
-            {{ project_form.start_time.errors }}
-        </div>
+                        <!-- Funding Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Funding Details</h5>
+                            <div class="mb-3">
+                                {{ project_form.total_target.label_tag }}
+                                {{ project_form.total_target }}
+                                {% if project_form.total_target.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ project_form.total_target.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
 
-        <div class="form-group">
-            {{ project_form.end_time.label_tag }}
-            {{ project_form.end_time }}
-            {{ project_form.end_time.errors }}
-        </div>
+                        <!-- Timeline -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Project Timeline</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ project_form.start_time.label_tag }}
+                                    {{ project_form.start_time }}
+                                    {% if project_form.start_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ project_form.start_time.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ project_form.end_time.label_tag }}
+                                    {{ project_form.end_time }}
+                                    {% if project_form.end_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ project_form.end_time.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
 
-        <!-- Tags Section -->
-        <div class="form-group">
-            <label>{{ project_form.tags.label }} (Optional)</label>
-            <div class="tags-container">
-                {{ project_form.tags }}
+                        <!-- Tags -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Tags</h5>
+                            <div class="tags-input-container p-3 border rounded">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" id="tagInput" 
+                                           placeholder="Add tags (press Enter to add)">
+                                    <button class="btn btn-outline-secondary" type="button" id="addTagBtn">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div id="selectedTags" class="d-flex flex-wrap gap-2"></div>
+
+                                <div style="display: none;">
+                                    {{ project_form.tags }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">
+                                Project Images 
+                                <span class="text-danger">*</span>
+                                <small class="text-muted">(At least one image required)</small>
+                            </h5>
+                            <div id="imageUploadsContainer">
+                                {{ image_formset.management_form }}
+                                <div class="text-center mb-3">
+                                    <button type="button" id="addImageBtn" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus me-2"></i>Add Image (0/5)
+                                    </button>
+                                </div>
+                                <div class="row g-3" id="previewContainer" style="display: none;">
+                                    {% for form in image_formset %}
+                                        {{ form.id }}
+                                        <div class="col-md-4 image-form-container">
+                                            {{ form.image }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="row g-3" id="imagePreviewsGrid"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Create Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            {{ project_form.tags.errors }}
-            <small class="form-text text-muted">{{ project_form.tags.help_text }}</small>
         </div>
-
-        <!-- Image Upload Section -->
-        {{ image_formset.management_form }}
-        {% for form in image_formset %}
-            <div class="form-group">
-                <label>Project Image {{ forloop.counter }}</label>
-                {{ form.image }}
-                {{ form.errors }}
-            </div>
-        {% endfor %}
-
-        <button type="submit" class="btn btn-primary">Create Project</button>
-    </form>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.tags-container {
+    max-height: 200px;
+    overflow-y: auto;
+}
+.tags-container ul {
+    list-style: none;
+    padding: 0;
+    columns: 2;
+}
+.tags-container li {
+    margin-bottom: 0.5rem;
+}
+.image-preview {
+    max-width: 100%;
+    height: 150px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 4px;
+}
+.image-preview.empty {
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tags-input-container {
+    background: #fff;
+}
+
+.tag-badge {
+    background: #e9ecef;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: inline-flex;
+    align-items: center;
+    margin: 2px;
+}
+
+.tag-badge .remove-tag {
+    margin-left: 5px;
+    cursor: pointer;
+    color: #dc3545;
+}
+
+.suggestions-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.tag-suggestion {
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.tag-suggestion:hover {
+    background: #e9ecef;
+}
+
+.image-preview-card {
+    position: relative;
+    height: 150px;  /* Reduced from 200px */
+    width: 150px;   /* Added fixed width */
+    margin: auto;   /* Center in column */
+    overflow: hidden;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+}
+
+.image-preview-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.col-md-4 {
+    display: flex;
+    justify-content: center;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tags handling
+    const tagInput = document.getElementById('tagInput');
+    const addTagBtn = document.getElementById('addTagBtn');
+    const selectedTags = document.getElementById('selectedTags');
+    const tagSuggestions = document.getElementById('tagSuggestions');
+    const hiddenTagsInput = document.querySelector('#id_tags');
+    let selectedTagsArray = [];
+
+    // Get existing tags from database (passed from view)
+    const existingTags = {{ existing_tags_json|safe }};
+
+    function addTag(tagName) {
+        tagName = tagName.trim().toLowerCase();
+        if (tagName && !selectedTagsArray.includes(tagName)) {
+            selectedTagsArray.push(tagName);
+            const badge = document.createElement('span');
+            badge.className = 'tag-badge';
+            badge.innerHTML = `
+                ${tagName}
+                <span class="remove-tag" data-tag="${tagName}">×</span>
+            `;
+            selectedTags.appendChild(badge);
+            updateHiddenInput();
+            tagInput.value = '';
+            showTagSuggestions('');
+        }
+    }
+
+    function updateHiddenInput() {
+        const selectedOptions = Array.from(hiddenTagsInput.options);
+        selectedOptions.forEach(option => {
+            option.selected = selectedTagsArray.includes(option.text.toLowerCase());
+        });
+    }
+
+    function showTagSuggestions(query) {
+        const suggestionsContainer = tagSuggestions.querySelector('.suggestions-container');
+        suggestionsContainer.innerHTML = '';
+        
+        if (!query) {
+            tagSuggestions.classList.add('d-none');
+            return;
+        }
+
+        const matches = existingTags.filter(tag => 
+            tag.toLowerCase().includes(query.toLowerCase()) && 
+            !selectedTagsArray.includes(tag.toLowerCase())
+        );
+
+        if (matches.length > 0) {
+            matches.forEach(tag => {
+                const suggestion = document.createElement('span');
+                suggestion.className = 'tag-suggestion';
+                suggestion.textContent = tag;
+                suggestion.addEventListener('click', () => addTag(tag));
+                suggestionsContainer.appendChild(suggestion);
+            });
+            tagSuggestions.classList.remove('d-none');
+        } else {
+            tagSuggestions.classList.add('d-none');
+        }
+    }
+
+    tagInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(tagInput.value);
+        } else {
+            showTagSuggestions(tagInput.value);
+        }
+    });
+
+    addTagBtn.addEventListener('click', () => addTag(tagInput.value));
+
+    selectedTags.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-tag')) {
+            const tagToRemove = e.target.dataset.tag;
+            selectedTagsArray = selectedTagsArray.filter(tag => tag !== tagToRemove);
+            e.target.parentElement.remove();
+            updateHiddenInput();
+        }
+    });
+
+    // Images handling
+    const maxImages = 5;
+    const imageContainer = document.getElementById('imagePreviewsGrid');
+    const addImageBtn = document.getElementById('addImageBtn');
+    const totalForms = document.querySelector('#id_images-TOTAL_FORMS');
+    const hiddenInputsContainer = document.getElementById('previewContainer');
+    const imageUploadsContainer = document.getElementById('imageUploadsContainer');
+    
+    addImageBtn.addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.click();
+
+        input.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const currentCount = imageContainer.children.length;
+                if (currentCount < maxImages) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        addImagePreview(e.target.result, currentCount);
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                    
+                    // Update hidden form input
+                    const hiddenInput = hiddenInputsContainer.querySelector(`input[name="images-${currentCount}-image"]`);
+                    if (hiddenInput) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(this.files[0]);
+                        hiddenInput.files = dataTransfer.files;
+                    }
+                }
+            }
+        });
+    });
+
+    function addImagePreview(src, index) {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-3';
+        col.innerHTML = `
+            <div class="image-preview-card">
+                <img src="${src}" alt="Preview">
+                <button type="button" class="remove-image" data-index="${index}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        imageContainer.appendChild(col);
+        
+        // Update formset count and display
+        updateImageCountDisplay();
+    }
+
+    function updateImageCountDisplay() {
+        const currentCount = imageContainer.getElementsByClassName('image-preview-card').length;
+        addImageBtn.innerHTML = `<i class="fas fa-plus me-2"></i>Add Image (${currentCount}/5)`;
+        addImageBtn.disabled = currentCount >= maxImages;
+        
+        // Update formset management form
+        totalForms.value = currentCount;
+        
+        // Update hidden inputs values
+        const hiddenInputs = hiddenInputsContainer.querySelectorAll('input[type="file"]');
+        hiddenInputs.forEach((input, idx) => {
+            input.name = `images-${idx}-image`;
+            if (idx < currentCount) {
+                input.required = true;
+            } else {
+                input.required = false;
+            }
+        });
+    }
+
+    imageContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-image')) {
+            const container = e.target.closest('.col-md-4');
+            const index = parseInt(e.target.closest('.remove-image').dataset.index);
+            
+            // Clear hidden input
+            const hiddenInput = hiddenInputsContainer.querySelector(`input[name="images-${index}-image"]`);
+            if (hiddenInput) {
+                hiddenInput.value = '';
+            }
+            
+            container.remove();
+            updateImageCountDisplay();
+            reindexImages();
+        }
+    });
+
+    function reindexImages() {
+        imageContainer.querySelectorAll('.remove-image').forEach((btn, idx) => {
+            btn.dataset.index = idx;
+        });
+    }
+
+    // Add form submit validation with fixed image counting
+    document.getElementById('createProjectForm').addEventListener('submit', function(e) {
+        // Remove any existing error messages
+        const existingAlert = imageUploadsContainer.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+
+        // Check for valid images
+        const validImages = Array.from(hiddenInputsContainer.querySelectorAll('input[type="file"]'))
+            .filter(input => input.files && input.files.length > 0);
+
+        if (validImages.length === 0) {
+            e.preventDefault();
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <strong>Error!</strong> Please add at least one image for your project.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            imageUploadsContainer.insertBefore(alertDiv, imageUploadsContainer.firstChild);
+            alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+});
+</script>
 {% endblock %}
 

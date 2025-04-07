@@ -1,51 +1,174 @@
 <!-- templates/projects/project_list.html -->
 
 {% extends 'base.html' %}
-
-{% comment %} {% block content %}
-  <h1>All Projects</h1>
-  <ul>
-    {% for project in projects %}
-      <li>
-        <!--<a href="{% url 'project_detail' pk=project.pk %}">{{ project.title }}</a> -->
-
-        <a href="{% url 'projects:project_detail' pk=project.pk %}">{{ project.title }}</a>
-
-        <!-- You can display other project details here, like description, target, etc. -->
-      </li>
-    {% empty %}
-      <p>No projects available.</p>
-    {% endfor %}
-  </ul>
-{% endblock %} {% endcomment %}
-
-
+{% load static %}
 
 {% block content %}
 <div class="container py-5">
-    <h1 class="mb-4">All Projects</h1>
-
-    {% if projects %}
-    <div class="row">
-        {% for project in projects %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <img src="{{ project.images.first.url }}" class="card-img-top" alt="{{ project.title }}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ project.title }}</h5>
-                    <p class="card-text">{{ project.details|slice:":100" }}...</p>
-                    <p class="card-text"><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
-                    <p class="card-text"><strong>Category:</strong> {{ project.category }}</p>
-                </div>
-                <div class="card-footer">
-                    <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-primary w-100">View Project</a>
-                </div>
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search projects...">
+                <button class="btn btn-outline-secondary" type="button">Search</button>
             </div>
         </div>
-        {% endfor %}
+        <div class="col-md-4">
+            <select class="form-select" id="categoryFilter">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
-    {% else %}
-    <p>No projects available.</p>
+
+    <!-- Projects Grid -->
+    <div class="row" id="projectsGrid">
+        {% if projects %}
+            {% for project in projects %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm hover-effect">
+                    <div class="card-img-wrapper" style="height: 200px; overflow: hidden;">
+                        {% if project.get_first_image %}
+                            <img src="{{ project.get_first_image }}" 
+                                 class="card-img-top" 
+                                 alt="{{ project.title }}"
+                                 style="object-fit: cover; height: 100%; width: 100%;">
+                        {% else %}
+                            <img src="{% static 'images/default-project.png'%}" 
+                                 class="card-img-top" 
+                                 alt="Default Project Image"
+                                 style="object-fit: cover; height: 100%; width: 100%;">
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body">
+                        <span class="badge bg-primary mb-2">{{ project.category.name }}</span>
+                        <h5 class="card-title text-truncate">{{ project.title }}</h5>
+                        <div class="progress mb-2" style="height: 5px;">
+                            <div class="progress-bar bg-success" 
+                                 role="progressbar" 
+                                 style="width: {{ project.progress }}%">
+                            </div>
+                        </div>
+                        <p class="card-text small text-muted mb-2">
+                            <i class="fas fa-chart-line me-1"></i>
+                            {{ project.progress }}% funded
+                        </p>
+                        <p class="card-text text-truncate">{{ project.details }}</p>
+                    </div>
+
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="{% url 'projects:project_detail' pk=project.pk %}" 
+                           class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>No projects available.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if projects.has_other_pages %}
+    <nav aria-label="Project pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if projects.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ projects.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+
+            {% for num in projects.paginator.page_range %}
+                <li class="page-item {% if projects.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+
+            {% if projects.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ projects.next_page_number }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
     {% endif %}
 </div>
+
+{% block extra_css %}
+<style>
+.hover-effect {
+    transition: transform 0.2s ease-in-out;
+    border: none;
+}
+.hover-effect:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+.card-img-wrapper {
+    position: relative;
+    background-color: #f8f9fa;
+}
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+.progress-bar {
+    transition: width 0.6s ease;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Lazy loading for images
+    document.addEventListener("DOMContentLoaded", function() {
+        var lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
+
+        if ("IntersectionObserver" in window) {
+            let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        let lazyImage = entry.target;
+                        lazyImage.src = lazyImage.dataset.src;
+                        lazyImage.classList.remove("lazy");
+                        lazyImageObserver.unobserve(lazyImage);
+                    }
+                });
+            });
+
+            lazyImages.forEach(function(lazyImage) {
+                lazyImageObserver.observe(lazyImage);
+            });
+        }
+    });
+
+    // Search and filter functionality
+    document.getElementById('searchInput').addEventListener('input', filterProjects);
+    document.getElementById('categoryFilter').addEventListener('change', filterProjects);
+
+    function filterProjects() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const categoryId = document.getElementById('categoryFilter').value;
+        const projects = document.querySelectorAll('#projectsGrid .col-md-4');
+
+        projects.forEach(project => {
+            const title = project.querySelector('.card-title').textContent.toLowerCase();
+            const category = project.querySelector('.badge').textContent;
+            const matchesSearch = title.includes(searchTerm);
+            const matchesCategory = !categoryId || project.dataset.categoryId === categoryId;
+            
+            project.style.display = matchesSearch && matchesCategory ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}
 {% endblock %}

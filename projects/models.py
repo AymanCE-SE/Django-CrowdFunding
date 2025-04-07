@@ -4,11 +4,15 @@ from django.utils import timezone
 from decimal import Decimal
 
 
-# class Category(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
 
-#     def __str__(self) -> str:
-#         return self.name
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']  
+
+    def __str__(self):
+        return self.name
 
 
 class Tag(models.Model):
@@ -32,6 +36,12 @@ class Project(models.Model):
     tags = models.ManyToManyField(Tag)
     donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='projects'
+    )
 
     class Meta:
         ordering = ['-created_at']
@@ -52,9 +62,10 @@ class Project(models.Model):
 
     @property
     def is_active(self):
-        """Check if project is currently active"""
+        """Check if project is currently active for donations"""
         now = timezone.now()
-        return self.start_time <= now <= self.end_time
+        return (self.start_time <= now <= self.end_time and 
+                self.donated_amount < self.total_target)
 
     @property
     def time_remaining(self):
@@ -129,12 +140,64 @@ class Project(models.Model):
             id=self.id
         ).distinct()[:limit]
 
+    def get_first_image(self):
+        first_image = self.images.first()  # Using the related_name
+        if first_image:
+            return first_image.image.url
+        return None
+
+    def get_status(self):
+        """Get the current status of the project"""
+        now = timezone.now()
+        if self.donated_amount >= self.total_target:
+            return 'funded'
+        elif now < self.start_time:
+            return 'coming_soon'
+        elif now > self.end_time:
+            return 'ended'
+        else:
+            return 'active'
+
+    def get_status_message(self):
+        """Get a user-friendly status message"""
+        status = self.get_status()
+        now = timezone.now()
+        
+        messages = {
+            'funded': 'Project has been fully funded!',
+            'coming_soon': f'Project starts in {(self.start_time - now).days} days',
+            'ended': 'Project has ended',
+            'active': f'Still needs {self.total_target - self.donated_amount:.2f} EGP'
+        }
+        return messages[status]
+
+    def can_be_deleted(self):
+        """Check if project can be deleted based on donation percentage"""
+        if self.total_target == 0:
+            return True
+        donation_percentage = (self.donated_amount / self.total_target) * 100
+        return donation_percentage < 25
+
+    def get_donation_percentage(self):
+        """Get the percentage of donations received"""
+        if self.total_target == 0:
+            return 0
+        return (self.donated_amount / self.total_target) * 100
+
+    def is_owner(self, user):
+        """Check if user is the project owner"""
+        return self.created_by == user
+
 
 class ProjectImage(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='project_images/')
-
-    def __str__(self) -> str:
+    project = models.ForeignKey(
+        Project, 
+        on_delete=models.CASCADE,
+        related_name='images'  # Add this related_name
+    )
+    image = models.ImageField(upload_to='projects/')
+    
+    def __str__(self):
         return f"Image for {self.project.title}"
 
 ############################################################################

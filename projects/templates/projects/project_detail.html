@@ -1,184 +1,217 @@
 {% extends 'base.html' %}
-
-{% comment %} {% extends 'base.html' %}
-
-{% block content %}
-  <h2>{{ project.title }}</h2>
-  <p>{{ project.details }}</p>
-  <p><strong>Category:</strong> {{ project.category }}</p>
-  <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
-  <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
-  <p><strong>Average Rating:</strong> 
-    {% if average_rating %}
-      {{ average_rating }} / 5
-    {% else %}
-      No ratings yet
-    {% endif %}
-  </p>
-
-  <!-- Project Image Slider -->
-  <div id="project-image-slider">
-    {% for image in project.images.all %}
-      <img src="{{ image.url }}" alt="{{ project.title }}">
-    {% endfor %}
-  </div>
-
-  <!-- Comments Section -->
-  <h3>Comments</h3>
-  {% if comments %}
-    <ul>
-      {% for comment in comments %}
-        <li>
-          <strong>{{ comment.user.username }}</strong>: {{ comment.text }}
-          <small>{{ comment.created_at }}</small>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No comments yet.</p>
-  {% endif %}
-
-  <!-- Donation and Comment Forms -->
-  <h3>Donate to This Project</h3>
-  <form method="post" action="{% url 'projects:donate_to_project' project.pk %}">
-    {% csrf_token %}
-    <label for="amount">Amount to Donate:</label>
-    <input type="number" name="amount" min="1" step="any" required>
-    <button type="submit">Donate</button>
-  </form>
-
-  <h3>Leave a Comment</h3>
-  <form method="post" action="{% url 'projects:add_comment' project.pk %}">
-    {% csrf_token %}
-    <textarea name="text" placeholder="Add a comment" required></textarea>
-    <button type="submit">Submit Comment</button>
-  </form>
-
-  <h3>Rate This Project</h3>
-  <form method="post" action="{% url 'projects:rate_project' project.pk %}">
-    {% csrf_token %}
-    <label for="score">Rating (1-5):</label>
-    <input type="number" name="score" min="1" max="5" required>
-    <button type="submit">Submit Rating</button>
-  </form>
-
-{% endblock %} {% endcomment %}
-
+{% load static %}
+{% load project_extras %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4">
+    <!-- Project Details -->
     <div class="row">
+        <!-- Left Column -->
         <div class="col-lg-8">
-            <!-- Project Title and Details -->
-            <div class="project-details mb-4">
-                <h2>{{ project.title }}</h2>
-                <p>{{ project.details }}</p>
-                <p><strong>Category:</strong> {{ project.category }}</p>
-                <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
-                <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
-                <p><strong>Average Rating:</strong> 
-                    {% if average_rating %}
-                        {{ average_rating }} / 5
-                    {% else %}
-                        No ratings yet
-                    {% endif %}
-                </p>
-            </div>
-
-            <!-- Project Image Slider -->
-            <div id="project-image-slider" class="carousel slide mb-4" data-bs-ride="carousel">
+            <!-- Project Images -->
+            {% if project.images.exists %}
+            <div id="projectCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     {% for image in project.images.all %}
-                        <div class="carousel-item {% if loop.first %}active{% endif %}">
-                            <img src="{{ image.url }}" class="d-block w-100" alt="{{ project.title }}">
-                        </div>
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" alt="Project Image">
+                    </div>
                     {% endfor %}
                 </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#project-image-slider" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
+                {% if project.images.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
                 </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#project-image-slider" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
+                <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
                 </button>
-            </div>
-
-            <!-- Comments Section -->
-            <div class="comments-section mb-4">
-                <h3>Comments</h3>
-                {% if comments %}
-                    <ul class="list-group">
-                        {% for comment in comments %}
-                            <li class="list-group-item">
-                                <strong>{{ comment.user.username }}</strong>: {{ comment.text }}
-                                <small class="text-muted">{{ comment.created_at }}</small>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>No comments yet.</p>
                 {% endif %}
             </div>
+            {% endif %}
 
-            <!-- Donation Form -->
-            <div class="donate-form mb-4">
-                <h3>Donate to This Project</h3>
-                <form method="post" action="{% url 'projects:donate_to_project' project.pk %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Amount to Donate:</label>
-                        <input type="number" name="amount" class="form-control" min="1" step="any" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Donate</button>
-                </form>
+            <!-- Project Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">{{ project.title }}</h2>
+                    <p class="text-muted">
+                        <small>Created by {{ project.created_by.username }} on {{ project.created_at|date }}</small>
+                    </p>
+                    {{ project.details|linebreaks }}
+                </div>
             </div>
 
-            <!-- Comment Form -->
-            <div class="comment-form mb-4">
-                <h3>Leave a Comment</h3>
-                <form method="post" action="{% url 'projects:add_comment' project.pk %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <textarea name="text" class="form-control" placeholder="Add a comment" rows="4" required></textarea>
+            <!-- Owner Actions -->
+            {% if is_owner %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Project Management</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'projects:edit_project' pk=project.pk %}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Project
+                        </a>
+                        {% if project.can_be_deleted %}
+                        <a href="{% url 'projects:delete_project' pk=project.pk %}" 
+                           class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Delete Project
+                        </a>
+                        {% endif %}
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit Comment</button>
-                </form>
+                </div>
             </div>
-
-            <!-- Rating Form -->
-            <div class="rate-form mb-4">
-                <h3>Rate This Project</h3>
-                <form method="post" action="{% url 'projects:rate_project' project.pk %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="score" class="form-label">Rating (1-5):</label>
-                        <input type="number" name="score" class="form-control" min="1" max="5" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit Rating</button>
-                </form>
-            </div>
+            {% endif %}
         </div>
 
-        <!-- Sidebar or Additional Information (optional) -->
+        <!-- Right Column -->
         <div class="col-lg-4">
-            <div class="card">
+            <!-- Project Status -->
+            <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h5 class="card-title">Project Info</h5>
-                    <p><strong>Category:</strong> {{ project.category }}</p>
-                    <p><strong>Target Amount:</strong> {{ project.total_target }} EGP</p>
-                    <p><strong>Total Donations:</strong> {{ total_donations }} EGP</p>
-                    <p><strong>Average Rating:</strong> 
-                        {% if average_rating %}
-                            {{ average_rating }} / 5
-                        {% else %}
-                            No ratings yet
-                        {% endif %}
-                    </p>
+                    <h2 class="card-title h4 mb-3">{{ project.title }}</h2>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ project.progress }}%"
+                             aria-valuenow="{{ project.progress }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <div class="text-center">
+                            <h6 class="mb-1">Raised</h6>
+                            <h4 class="text-success mb-0">{{ total_donations }} EGP</h4>
+                        </div>
+                        <div class="text-center">
+                            <h6 class="mb-1">Target</h6>
+                            <h4 class="mb-0">{{ project.total_target }} EGP</h4>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="fas fa-clock me-2"></i>Time Remaining</span>
+                            <strong>{{ project.time_remaining }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="fas fa-users me-2"></i>Backers</span>
+                            <strong>{{ project.get_donation_stats.total_donors }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-star me-2"></i>Rating</span>
+                            <strong>{{ average_rating|default:"No ratings" }}</strong>
+                        </div>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        {% with status=project.get_status %}
+                            <div class="mb-4">
+                                {% if status == 'coming_soon' %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-clock me-2"></i>{{ project.get_status_message }}
+                                    </div>
+                                    <button class="btn btn-secondary btn-lg w-100" disabled>
+                                        <i class="fas fa-clock me-2"></i>Coming Soon
+                                    </button>
+                                {% elif status == 'ended' %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-circle me-2"></i>{{ project.get_status_message }}
+                                    </div>
+                                    <button class="btn btn-secondary btn-lg w-100" disabled>
+                                        <i class="fas fa-times-circle me-2"></i>Project Ended
+                                    </button>
+                                {% elif status == 'funded' %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>{{ project.get_status_message }}
+                                    </div>
+                                    <button class="btn btn-success btn-lg w-100" disabled>
+                                        <i class="fas fa-check-circle me-2"></i>Fully Funded
+                                    </button>
+                                {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Target:</strong> {{ project.total_target|floatformat:2 }} EGP<br>
+                                        <strong>Still Needed:</strong> {{ project.get_status_message }}
+                                    </div>
+                                    <a href="{% url 'projects:donate_to_project' pk=project.pk %}" 
+                                       class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-hand-holding-usd me-2"></i>Donate Now
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endwith %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>Please login to donate
+                        </div>
+                        <a href="{% url 'login' %}?next={{ request.path }}" 
+                           class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login to Donate
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Creator Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Project Creator</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{% static 'images/profile.png' %}" 
+                             class="rounded-circle me-3" 
+                             width="50" height="50" 
+                             alt="{{ project.created_by.username }}">
+                        <div>
+                            <h6 class="mb-0">{{ project.created_by.username }}</h6>
+                            <small class="text-muted">Member since {{ project.created_by.date_joined|date }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Donors -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Top Supporters</h5>
+                    {% for donor in project.get_top_donors %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ donor.user__username }}</span>
+                        <strong>{{ donor.total_amount }} EGP</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No donations yet.</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+    .progress {
+        border-radius: 10px;
+    }
+    .progress-bar {
+        transition: width 1.5s ease-in-out;
+    }
+    .card {
+        border: none;
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+    }
+    .carousel-item img {
+        border-radius: 4px;
+    }
+</style>
 {% endblock %}

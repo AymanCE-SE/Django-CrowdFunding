@@ -1,9 +1,8 @@
 from django.contrib import admin
-from .models import Project, Donation
+from .models import Category, Project
 
-# Register your models here.
-
-
-
-admin.site.register(Project)
-admin.site.register(Donation)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+    ordering = ('name',)

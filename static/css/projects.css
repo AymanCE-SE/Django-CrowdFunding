@@ -1,0 +1,36 @@
+.hover-effect {
+    transition: transform 0.2s ease-in-out;
+}
+
+.hover-effect:hover {
+    transform: translateY(-5px);
+}
+
+.lazy {
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+}
+
+.lazy.loaded {
+    opacity: 1;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+}

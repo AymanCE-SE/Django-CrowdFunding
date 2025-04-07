@@ -4,65 +4,163 @@
 
 {% block content %}
 <div class="container py-4">
-    <!-- Project Details -->
-    <div class="row">
-        <!-- Left Column -->
+    <div class="row g-4">
+        <!-- Left Column (8 columns) -->
         <div class="col-lg-8">
-            <!-- Project Images -->
-            {% if project.images.exists %}
-            <div id="projectCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    {% for image in project.images.all %}
-                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                        <img src="{{ image.image.url }}" class="d-block w-100" alt="Project Image">
-                    </div>
-                    {% endfor %}
-                </div>
-                {% if project.images.count > 1 %}
-                <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                </button>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Project Info -->
+            <!-- Project Header -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h2 class="card-title">{{ project.title }}</h2>
-                    <p class="text-muted">
-                        <small>Created by {{ project.created_by.username }} on {{ project.created_at|date }}</small>
-                    </p>
-                    {{ project.details|linebreaks }}
-                </div>
-            </div>
-
-            <!-- Owner Actions -->
-            {% if is_owner %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Project Management</h5>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'projects:edit_project' pk=project.pk %}" 
-                           class="btn btn-primary">
-                            <i class="fas fa-edit me-2"></i>Edit Project
-                        </a>
-                        {% if project.can_be_deleted %}
-                        <a href="{% url 'projects:delete_project' pk=project.pk %}" 
-                           class="btn btn-danger">
-                            <i class="fas fa-trash me-2"></i>Delete Project
-                        </a>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="h2 mb-2">{{ project.title }}</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i>Created {{ project.created_at|date }}
+                            </p>
+                        </div>
+                        {% if is_owner %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item text-primary" href="{% url 'projects:edit_project' pk=project.pk %}">
+                                        <i class="fas fa-edit me-2"></i>Edit Project
+                                    </a>
+                                </li>
+                                {% if project.can_be_deleted %}
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'projects:delete_project' pk=project.pk %}">
+                                        <i class="fas fa-trash me-2"></i>Delete Project
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
                         {% endif %}
                     </div>
+
+                    <!-- Project Images Carousel -->
+                    {% if project.images.exists %}
+                    <div id="projectCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                        <div class="carousel-inner rounded">
+                            {% for image in project.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100" alt="Project Image"
+                                     style="height: 400px; object-fit: cover;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if project.images.count > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                        <div class="carousel-indicators">
+                            {% for image in project.images.all %}
+                            <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+                                    class="{% if forloop.first %}active{% endif %}"></button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Tabs Navigation -->
+                    <ul class="nav nav-pills nav-fill mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description">
+                                <i class="fas fa-info-circle me-2"></i>Description
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#comments">
+                                <i class="fas fa-comments me-2"></i>Comments
+                                <span class="badge bg-secondary ms-1">{{ comments.count }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#updates">
+                                <i class="fas fa-bell me-2"></i>Updates
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tabs Content -->
+                    <div class="tab-content">
+                        <!-- Description Tab -->
+                        <div class="tab-pane fade show active" id="description">
+                            <div class="p-3">
+                                {{ project.details|linebreaks }}
+                                {% if project.tags.all %}
+                                <div class="mt-4">
+                                    {% for tag in project.tags.all %}
+                                    <span class="badge bg-light text-dark me-2">#{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Comments Tab -->
+                        <div class="tab-pane fade" id="comments">
+                            <div class="p-3">
+                                {% if user.is_authenticated %}
+                                <form method="post" action="{% url 'projects:add_comment' pk=project.pk %}" class="mb-4">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        {{ comment_form.text }}
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-2">
+                                        <i class="fas fa-paper-plane me-2"></i>Add Comment
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <div class="comments-list">
+                                    {% for comment in comments %}
+                                    <div class="card bg-light border-0 mb-3">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{% static 'images/profile.png' %}" 
+                                                         class="rounded-circle me-2" 
+                                                         width="32" height="32" 
+                                                         alt="{{ comment.user.username }}">
+                                                    <h6 class="card-subtitle mb-0">{{ comment.user.username }}</h6>
+                                                </div>
+                                                <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                            </div>
+                                            <p class="card-text mb-0">{{ comment.text }}</p>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-comments fa-2x mb-3"></i>
+                                        <p>No comments yet. Be the first to comment!</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Updates Tab -->
+                        <div class="tab-pane fade" id="updates">
+                            <div class="p-3">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-bell fa-2x mb-3"></i>
+                                    <p>Project updates will appear here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% endif %}
         </div>
 
-        <!-- Right Column -->
+        <!-- Right Column (4 columns) -->
         <div class="col-lg-4">
             <!-- Project Status -->
             <div class="card shadow-sm mb-4">
@@ -189,29 +287,81 @@
 
 {% block extra_css %}
 <style>
-    .progress {
-        border-radius: 10px;
+.carousel {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.carousel-item img {
+    transition: transform 0.3s ease-in-out;
+}
+
+.carousel:hover .carousel-item img {
+    transform: scale(1.02);
+}
+
+.nav-pills .nav-link {
+    color: #6c757d;
+    background-color: transparent;
+    border: 1px solid #dee2e6;
+    margin: 0 4px;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.comments-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.comment-form textarea {
+    border-radius: 8px;
+    resize: none;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+.dropdown-item {
+    padding: 8px 16px;
+}
+
+.dropdown-item i {
+    width: 20px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    transition: width 1.5s ease-in-out;
+}
+
+@media (max-width: 768px) {
+    .nav-pills .nav-link {
+        margin: 4px 0;
     }
-    .progress-bar {
-        transition: width 1.5s ease-in-out;
-    }
-    .card {
-        border: none;
-        transition: transform 0.2s;
-    }
-    .card:hover {
-        transform: translateY(-2px);
-    }
-    .nav-tabs .nav-link {
-        border: none;
-        color: #6c757d;
-    }
-    .nav-tabs .nav-link.active {
-        color: #0d6efd;
-        border-bottom: 2px solid #0d6efd;
-    }
-    .carousel-item img {
-        border-radius: 4px;
-    }
+}
 </style>
 {% endblock %}

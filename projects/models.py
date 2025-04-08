@@ -6,10 +6,12 @@ from decimal import Decimal
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name_plural = "Categories"
-        ordering = ['name']  
+        ordering = ['name']
+        db_table = 'projects_category'
 
     def __str__(self):
         return self.name
@@ -21,6 +23,9 @@ class Tag(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        db_table = 'projects_tag'
+
 
 class Project(models.Model):
     title = models.CharField(max_length=200)
@@ -31,17 +36,18 @@ class Project(models.Model):
         on_delete=models.CASCADE,
         related_name='created_projects'  # Add this for easier access to user's projects
     )
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    tags = models.ManyToManyField(Tag)
-    donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(
-        Category,
+        'Category', 
         on_delete=models.SET_NULL,
         null=True,
+        blank=True, 
         related_name='projects'
     )
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    tags = models.ManyToManyField('Tag')
+    donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']

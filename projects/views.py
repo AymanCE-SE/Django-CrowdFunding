@@ -3,13 +3,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Sum, F
 from django.contrib import messages
 from django.core.paginator import Paginator
-
+from django.forms import modelformset_factory  
 from .forms import (
     ProjectForm, 
     ProjectImageFormSet,
     DonationForm, 
     CommentForm, 
-    RatingForm
+    RatingForm,
+    ProjectImageForm
 )
 from .models import (
     Project, 
@@ -90,7 +91,7 @@ def create_project(request):
                     # Save images
                     images = image_formset.save(commit=False)
                     for image in images:
-                        if image.image:
+                        if image.image:  # Only save image if it exists
                             image.project = project
                             image.save()
 
@@ -99,12 +100,13 @@ def create_project(request):
                 except Exception as e:
                     messages.error(request, f'Error creating project: {str(e)}')
         else:
+            # Show form errors
             for field, errors in project_form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
     else:
         project_form = ProjectForm()
-        image_formset = ProjectImageFormSet(queryset=ProjectImage.objects.none())
+        image_formset = ProjectImageFormSet(queryset=ProjectImage.objects.none())  # No images to pre-load
 
     context = {
         'project_form': project_form,
@@ -223,45 +225,53 @@ def rate_project(request, pk):
 
 
 @login_required
+@login_required
 def edit_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    
-    # Check if user is the project creator
+
     if project.created_by != request.user:
         messages.error(request, "You don't have permission to edit this project.")
         return redirect('projects:project_detail', pk=project.pk)
-    
+
     if request.method == 'POST':
         project_form = ProjectForm(request.POST, request.FILES, instance=project)
-        image_formset = ProjectImageFormSet(request.POST, request.FILES, 
-                                          queryset=project.images.all())
-        
+        ImageFormSet = modelformset_factory(ProjectImage, form=ProjectImageForm, extra=0, can_delete=True)
+        image_formset = ImageFormSet(request.POST, request.FILES, queryset=ProjectImage.objects.filter(project=project))
+
         if project_form.is_valid() and image_formset.is_valid():
             try:
+                # Save project changes
                 project = project_form.save()
-                # Handle image formset
+
+                # Save new images and handle deletions
                 images = image_formset.save(commit=False)
                 for image in images:
                     image.project = project
                     image.save()
-                # Delete marked images
+
+                # Delete images marked for deletion
                 for obj in image_formset.deleted_objects:
                     obj.delete()
-                
+
                 messages.success(request, 'Project updated successfully!')
                 return redirect('projects:project_detail', pk=project.pk)
+
             except Exception as e:
                 messages.error(request, f'Error updating project: {str(e)}')
+        else:
+            print("Project Form Errors:", project_form.errors)
+            print("Image Formset Errors:", image_formset.errors)
+
     else:
         project_form = ProjectForm(instance=project)
-        image_formset = ProjectImageFormSet(queryset=project.images.all())
-    
+        ImageFormSet = modelformset_factory(ProjectImage, form=ProjectImageForm, extra=0, can_delete=True)
+        image_formset = ImageFormSet(queryset=ProjectImage.objects.filter(project=project))
+
     return render(request, 'projects/edit_project.html', {
         'project_form': project_form,
         'image_formset': image_formset,
-        'project': project
+        'project': project,
     })
-
 
 @login_required
 def delete_project(request, pk):

@@ -1,11 +1,8 @@
 from django import forms
+from django.forms import inlineformset_factory
 from .models import Project, ProjectImage, Tag, Donation, Comment, Rating, Category
-from django.forms import modelformset_factory
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
-from django.core.files.images import get_image_dimensions
-from django.core.files import File
 
 class ProjectForm(forms.ModelForm):
     category = forms.ModelChoiceField(
@@ -57,12 +54,10 @@ class ProjectForm(forms.ModelForm):
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')
         
-        if start_time and end_time:
-            if start_time >= end_time:
-                raise ValidationError({
-                    'end_time': 'End time must be after start time'
-                })
-            
+        if start_time and end_time and start_time >= end_time:
+            raise ValidationError({
+                'end_time': _('End time must be after start time')
+            })
         return cleaned_data
 
 class ProjectImageForm(forms.ModelForm):
@@ -73,8 +68,20 @@ class ProjectImageForm(forms.ModelForm):
             'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
 
-# Optional: Allow multiple image uploads for the project
-ProjectImageFormSet = modelformset_factory(ProjectImage, form=ProjectImageForm, extra=3)
+# Use inlineformset_factory to tie ProjectImages to a specific Project
+# - extra=1 ensures one blank form is rendered (so there’s always at least one)
+# - max_num=5 and validate_max=True restrict the total images to five
+# - can_delete=True allows removing an image if needed
+ProjectImageFormSet = inlineformset_factory(
+    Project, 
+    ProjectImage, 
+    form=ProjectImageForm, 
+    extra=1, 
+    can_delete=True,
+    max_num=5,
+    validate_max=True,
+    fields=('image',)
+)
 
 class DonationForm(forms.ModelForm):
     class Meta:

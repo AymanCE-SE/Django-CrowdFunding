@@ -115,32 +115,36 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Images -->
-                        <div class="mb-4">
-                            <h5 class="border-bottom pb-2">
-                                Project Images 
-                                <span class="text-danger">*</span>
-                                <small class="text-muted">(At least one image required)</small>
-                            </h5>
-                            <div id="imageUploadsContainer">
-                                {{ image_formset.management_form }}
-                                <div class="text-center mb-3">
-                                    <button type="button" id="addImageBtn" class="btn btn-outline-primary">
-                                        <i class="fas fa-plus me-2"></i>Add Image (0/5)
-                                    </button>
-                                </div>
-                                <div class="row g-3" id="previewContainer" style="display: none;">
-                                    {% for form in image_formset %}
-                                        {{ form.id }}
-                                        <div class="col-md-4 image-form-container">
-                                            {{ form.image }}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                <div class="row g-3" id="imagePreviewsGrid"></div>
-                            </div>
-                        </div>
+<!-- Images -->
+<div class="mb-4">
+    <h5 class="border-bottom pb-2">
+        Project Images 
+        <span class="text-danger">*</span>
+        <small class="text-muted">(At least one image required)</small>
+    </h5>
+    <div id="imageUploadsContainer">
+        {{ image_formset.management_form }}
+        <div class="text-center mb-3">
+            <button type="button" id="addImageBtn" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-2"></i>Add Image (0/5)
+            </button>
+        </div>
+        <!-- This container shows hidden formset inputs and, if updating, existing images -->
+        <div class="row g-3" id="previewContainer" style="display: none;">
+            {% for form in image_formset %}
+                {{ form.id }}
+                <div class="col-md-4 image-form-container">
+                    {% if form.instance.pk and form.instance.image %}
+                        <img src="{{ form.instance.image.url }}" alt="Existing image" class="existing-image" data-index="{{ forloop.counter0 }}">
+                    {% endif %}
+                    {{ form.image }}
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Container to hold newly added image previews -->
+        <div class="row g-3" id="imagePreviewsGrid"></div>
+    </div>
+</div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
@@ -338,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalForms = document.querySelector('#id_images-TOTAL_FORMS');
     const hiddenInputsContainer = document.getElementById('previewContainer');
     const imageUploadsContainer = document.getElementById('imageUploadsContainer');
-    
+
     addImageBtn.addEventListener('click', function() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -347,16 +351,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         input.addEventListener('change', function() {
             if (this.files && this.files[0]) {
-                const currentCount = imageContainer.children.length;
+                // Count existing previews (new + preexisting)
+                const newPreviewsCount = imageContainer.querySelectorAll('.image-preview-card').length;
+                const existingImagesCount = hiddenInputsContainer.querySelectorAll('img.existing-image').length;
+                const currentCount = newPreviewsCount + existingImagesCount;
+                
                 if (currentCount < maxImages) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        addImagePreview(e.target.result, currentCount);
+                        addImagePreview(e.target.result, newPreviewsCount);
                     }
                     reader.readAsDataURL(this.files[0]);
-                    
-                    // Update hidden form input
-                    const hiddenInput = hiddenInputsContainer.querySelector(`input[name="images-${currentCount}-image"]`);
+
+                    // Update the hidden file input for this new image (if exists)
+                    const hiddenInput = hiddenInputsContainer.querySelector(`input[name="images-${newPreviewsCount}-image"]`);
                     if (hiddenInput) {
                         const dataTransfer = new DataTransfer();
                         dataTransfer.items.add(this.files[0]);
@@ -379,42 +387,40 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         imageContainer.appendChild(col);
-        
-        // Update formset count and display
         updateImageCountDisplay();
     }
 
     function updateImageCountDisplay() {
-        const currentCount = imageContainer.getElementsByClassName('image-preview-card').length;
-        addImageBtn.innerHTML = `<i class="fas fa-plus me-2"></i>Add Image (${currentCount}/5)`;
+        // Count newly added previews plus any existing images
+        const newPreviewsCount = imageContainer.querySelectorAll('.image-preview-card').length;
+        const existingImagesCount = hiddenInputsContainer.querySelectorAll('img.existing-image').length;
+        const currentCount = newPreviewsCount + existingImagesCount;
+
+        addImageBtn.innerHTML = `<i class="fas fa-plus me-2"></i>Add Image (${currentCount}/${maxImages})`;
         addImageBtn.disabled = currentCount >= maxImages;
+
+        // Update the formset management form for new previews only
+        totalForms.value = newPreviewsCount;
         
-        // Update formset management form
-        totalForms.value = currentCount;
-        
-        // Update hidden inputs values
+        // Update file input naming and 'required' attribute for newly added images
         const hiddenInputs = hiddenInputsContainer.querySelectorAll('input[type="file"]');
         hiddenInputs.forEach((input, idx) => {
             input.name = `images-${idx}-image`;
-            if (idx < currentCount) {
-                input.required = true;
-            } else {
-                input.required = false;
-            }
+            input.required = idx < newPreviewsCount;
         });
     }
 
+    // Remove newly added image preview (existing images are not removable by this JS)
     imageContainer.addEventListener('click', function(e) {
         if (e.target.closest('.remove-image')) {
             const container = e.target.closest('.col-md-4');
             const index = parseInt(e.target.closest('.remove-image').dataset.index);
-            
-            // Clear hidden input
+
+            // Clear the corresponding hidden file input (if exists)
             const hiddenInput = hiddenInputsContainer.querySelector(`input[name="images-${index}-image"]`);
             if (hiddenInput) {
                 hiddenInput.value = '';
             }
-            
             container.remove();
             updateImageCountDisplay();
             reindexImages();
@@ -422,12 +428,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function reindexImages() {
+        // Reassign the data-index attributes for remove buttons of newly added image previews
         imageContainer.querySelectorAll('.remove-image').forEach((btn, idx) => {
             btn.dataset.index = idx;
         });
     }
 
-    // Add form submit validation with fixed image counting
+    // Validate images on form submission
     document.getElementById('createProjectForm').addEventListener('submit', function(e) {
         // Remove any existing error messages
         const existingAlert = imageUploadsContainer.querySelector('.alert');
@@ -435,11 +442,14 @@ document.addEventListener('DOMContentLoaded', function() {
             existingAlert.remove();
         }
 
-        // Check for valid images
-        const validImages = Array.from(hiddenInputsContainer.querySelectorAll('input[type="file"]'))
+        // Count valid files from hidden inputs (newly added)...
+        const newValidImages = Array.from(hiddenInputsContainer.querySelectorAll('input[type="file"]'))
             .filter(input => input.files && input.files.length > 0);
+        // ...and count existing images from the rendered <img> tags
+        const existingImages = hiddenInputsContainer.querySelectorAll('img.existing-image');
+        const totalImages = newValidImages.length + existingImages.length;
 
-        if (validImages.length === 0) {
+        if (totalImages === 0) {
             e.preventDefault();
             const alertDiv = document.createElement('div');
             alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
@@ -450,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
             imageUploadsContainer.insertBefore(alertDiv, imageUploadsContainer.firstChild);
             alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    });
+        });
 });
 </script>
 {% endblock %}

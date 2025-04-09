@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Sum, F
-from django.db import transaction
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.forms import modelformset_factory, inlineformset_factory
+from django.db import transaction
 from .forms import (
     ProjectForm, 
     ProjectImageFormSet,
@@ -239,14 +239,14 @@ def rate_project(request, pk):
 def edit_project(request, pk):
     project = get_object_or_404(Project, pk=pk, created_by=request.user)
     
-    # Define the formset
     ProjectImageFormSet = inlineformset_factory(
         Project,
         ProjectImage,
         fields=['image'],
         extra=1,
         can_delete=True,
-        max_num=5
+        max_num=5,
+        validate_max=True
     )
 
     if request.method == 'POST':
@@ -255,7 +255,7 @@ def edit_project(request, pk):
             request.POST, 
             request.FILES,
             instance=project,
-            prefix='form'  # Add this explicit prefix
+            prefix='form'
         )
 
         if project_form.is_valid() and image_formset.is_valid():
@@ -273,8 +273,14 @@ def edit_project(request, pk):
                             tag, _ = Tag.objects.get_or_create(name=tag_name)
                             project.tags.add(tag)
 
-                    # Handle images
-                    image_formset.save()
+                    # Save images
+                    instances = image_formset.save(commit=False)
+                    for obj in image_formset.deleted_objects:
+                        if obj.image:  # Check if image exists before deleting
+                            obj.delete()
+                    for instance in instances:
+                        instance.project = project
+                        instance.save()
 
                 messages.success(request, 'Project updated successfully!')
                 return redirect('projects:project_detail', pk=project.pk)
@@ -282,17 +288,12 @@ def edit_project(request, pk):
                 messages.error(request, f'Error updating project: {str(e)}')
     else:
         project_form = ProjectForm(instance=project)
-        image_formset = ProjectImageFormSet(
-            instance=project,
-            prefix='form'  # Add this explicit prefix
-        )
+        image_formset = ProjectImageFormSet(instance=project, prefix='form')
 
-    # Add debug context
     context = {
         'project': project,
         'project_form': project_form,
         'image_formset': image_formset,
-        'debug_management_form': image_formset.management_form.as_p(),  # Add this for debugging
     }
     return render(request, 'projects/edit_project.html', context)
 

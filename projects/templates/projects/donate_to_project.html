@@ -1,11 +1,39 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Donate to {{ project.title }}</h2>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="text-center mb-4">
+          <h1 class="display-4">{{ project.title }}</h1>
+          <p class="lead">Help {{ project.created_by.username }} achieve their goal.</p>
+        </div>
+        <div id="projectCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+          <div class="carousel-inner rounded">
+            {% for image in project.images.all %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+              <img src="{{ image.image.url }}" class="d-block w-100" alt="Project Image"
+                style="height: 400px; object-fit: cover;">
+            </div>
+            {% endfor %}
+          </div>
+          {% if project.images.count > 1 %}
+          <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </button>
+          {% endif %}
+        </div>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Donate</button>
-  </form>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-success btn-lg w-100">Donate</button>
+        </form>
+      </div>
+    </div>
+  </div>
 {% endblock %}
+

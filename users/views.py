@@ -69,3 +69,6 @@ def register(request):
     else:
         form = UserRegisterForm()
     return render(request, 'registration/register.html', {'form': form})
+
+# from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+# @PermissionRequiredMixin>>admin

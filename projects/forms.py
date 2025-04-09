@@ -93,7 +93,7 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['text']
         widgets = {
-            'text': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Leave a comment'}),
+            'text': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Leave a comment', 'rows': 2}),
         }
 
 class RatingForm(forms.ModelForm):

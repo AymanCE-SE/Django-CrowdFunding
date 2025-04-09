@@ -30,6 +30,15 @@ import json
 
 
 def project_detail(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    user_rating = None
+    
+    if request.user.is_authenticated:
+        try:
+            user_rating = Rating.objects.get(user=request.user, project=project).score
+        except Rating.DoesNotExist:
+            pass
+
     try:
         # Get project with related data
         project = get_object_or_404(Project.objects.prefetch_related(
@@ -51,7 +60,8 @@ def project_detail(request, pk):
             'average_rating': average_rating,
             'total_donations': total_donations,
             'comment_form': CommentForm() if request.user.is_authenticated else None,
-            'is_owner': is_owner,
+            'user_rating': user_rating,
+            'is_owner': request.user == project.created_by,
         }
         
         # Add any messages to the context
@@ -134,14 +144,7 @@ def create_project(request):
 def donate_to_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
     
-    # Check if project is active for donations
-    try:
-        is_active = project.is_active()  # Store the result
-    except Exception as e:
-        messages.error(request, 'Error checking project status.')
-        return redirect('projects:project_detail', pk=project.pk)
-    
-    if not is_active:  # Use the stored result
+    if not project.is_active:
         messages.error(request, 'This project is not currently accepting donations.')
         return redirect('projects:project_detail', pk=project.pk)
     
@@ -153,14 +156,14 @@ def donate_to_project(request, pk):
                 donation.user = request.user
                 donation.project = project
                 
-                # Check if donation would exceed target
                 if project.donated_amount + donation.amount > project.total_target:
                     messages.error(request, 'This donation would exceed the project target.')
                     return redirect('projects:project_detail', pk=project.pk)
                     
                 donation.save()
                 project.donated_amount = F('donated_amount') + donation.amount
-                project.save()
+                project.save(update_fields=['donated_amount'])
+                project.refresh_from_db()
                 
                 messages.success(request, 'Thank you for your donation!')
                 return redirect('projects:project_detail', pk=project.pk)
@@ -203,35 +206,21 @@ def add_comment(request, pk):
 
 @login_required
 def rate_project(request, pk):
-    project = Project.objects.get(pk=pk)
-
-    if request.method == 'POST':
-        form = RatingForm(request.POST)
-
-        if form.is_valid():
-            score = form.cleaned_data['score']
-            rating, created = Rating.objects.get_or_create(
+    project = get_object_or_404(Project, pk=pk)
+    
+    if request.method == 'POST' and request.user != project.created_by:
+        score = request.POST.get('score')
+        if score and score.isdigit() and 1 <= int(score) <= 5:
+            rating, created = Rating.objects.update_or_create(
                 user=request.user,
                 project=project,
-                defaults={'score': score}  # Set initial score for new ratings
+                defaults={'score': int(score)}
             )
-            if not created:
-                rating.score = score  # Update score for existing ratings
-                rating.save()
-
-            return redirect('projects:project_detail', pk=project.pk)
-    else:
-        # Pre-populate form with existing rating if it exists
-        try:
-            existing_rating = Rating.objects.get(user=request.user, project=project)
-            form = RatingForm(initial={'score': existing_rating.score})
-        except Rating.DoesNotExist:
-            form = RatingForm()
-
-    return render(request, 'projects/rate_project.html', {
-        'form': form,
-        'project': project,
-    })
+            messages.success(request, 'Thank you for rating this project!')
+        else:
+            messages.error(request, 'Invalid rating score.')
+    
+    return redirect('projects:project_detail', pk=pk)
 ##############################################################################################################
 
 

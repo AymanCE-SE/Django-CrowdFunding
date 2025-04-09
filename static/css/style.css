@@ -16,7 +16,7 @@ main {
 
 /* Navbar styles */
 .navbar {
-    background: linear-gradient(135deg, #302f2f 0%, #070310 100%) !important;
+    background: linear-gradient(135deg, #4a4646 0%, #2f2c3e 100%) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 

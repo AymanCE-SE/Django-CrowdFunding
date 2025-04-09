@@ -1,195 +1,284 @@
-{% extends 'base.html' %}
-{% load static %}
+<!-- @format -->
 
-{% block content %}
+{% extends 'base.html' %} {% load static %} {% block content %}
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow-sm">
-                <div class="card-header bg-transparent">
-                    <h3 class="card-title mb-0">Edit Project</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        {% if messages %}
-                        <div class="messages mb-3">
-                            {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <!-- Project Fields -->
-                        {% for field in project_form %}
-                        <div class="mb-3">
-                            <label class="form-label">{{ field.label }}</label>
-
-                            {% if field.name == 'tags' %}
-                                <input type="hidden" name="tags" id="id_tags" value="{{ field.value|join:',' }}">
-                                <div id="tag-badges" class="d-flex flex-wrap gap-2 mb-2">
-                                    {% for tag in field.field.choices %}
-                                        {% with tag.0 as tag_id %}
-                                        <span 
-                                            class="badge rounded-pill px-3 py-2 bg-secondary text-white tag-badge {% if tag_id in field.value %}active{% endif %}" 
-                                            data-tag="{{ tag_id }}">
-                                            {{ tag.1 }}
-                                        </span>
-                                        {% endwith %}
-                                    {% endfor %}
-                                </div>
-                                <input type="text" id="new-tag-input" class="form-control" placeholder="Add custom tag and press Enter">
-                            {% else %}
-                                {{ field }}
-                            {% endif %}
-
-                            {% if field.help_text %}
-                            <small class="form-text text-muted">{{ field.help_text }}</small>
-                            {% endif %}
-                            {% if field.errors %}
-                            <div class="invalid-feedback d-block">{{ field.errors }}</div>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-
-                        <!-- Project Images -->
-                        <h5 class="mb-3">Project Images</h5>
-                        {{ image_formset.management_form }}
-
-                        <!-- Existing images row -->
-                        <div class="d-flex flex-wrap gap-3 mb-3">
-                            {% for form in image_formset %}
-                            {% if form.instance.image %}
-                            <div class="position-relative">
-                                <img src="{{ form.instance.image.url }}" class="img-thumbnail" style="max-height: 100px">
-                                {{ form.id }}
-                                {{ form.DELETE }}
-                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-image-btn">&times;</button>
-                            </div>
-                            {% endif %}
-                            {% endfor %}
-                        </div>
-
-                        <!-- New images will be added here -->
-                        <div id="image-formset" class="mb-3"></div>
-
-                        <button type="button" class="btn btn-outline-primary mb-3" id="add-image-btn">
-                            + Add Image
-                        </button>
-
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">Update Project</button>
-                            <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-outline-secondary">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card shadow-sm">
+        <div class="card-header bg-transparent">
+          <h3 class="card-title mb-0">Edit Project</h3>
         </div>
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %} {% if messages %}
+            <div class="messages mb-3">
+              {% for message in messages %}
+              <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Project Fields -->
+            {% for field in project_form %}
+            <div class="mb-3">
+              <label class="form-label">{{ field.label }}</label>
+
+              {% if field.name == 'tags_input' %} {{ field }}
+              <div id="tag-badges" class="d-flex flex-wrap gap-2 mb-2">
+                {% for tag in project.tags.all %}
+                <span
+                  class="badge rounded-pill px-3 py-2 bg-primary text-white tag-badge active"
+                  data-tag="{{ tag.name }}">
+                  {{ tag.name }}
+                  <i class="fas fa-times ms-2 remove-tag"></i>
+                </span>
+                {% endfor %}
+              </div>
+              <input
+                type="text"
+                id="new-tag-input"
+                class="form-control"
+                placeholder="Type tag and press Enter (spaces allowed)" />
+              {% else %} {{ field }} {% endif %} {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+              {% endif %} {% if field.errors %}
+              <div class="invalid-feedback d-block">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- Project Images Section -->
+            <div class="mb-4">
+              <h5 class="mb-3">Project Images</h5>
+              {{ image_formset.management_form }}
+
+              <!-- Existing images -->
+              <div class="d-flex flex-wrap gap-3 mb-3" id="existing-images">
+                {% for form in image_formset %} {% if form.instance.image %}
+                <div class="position-relative image-container">
+                  <img
+                    src="{{ form.instance.image.url }}"
+                    class="img-thumbnail"
+                    style="max-height: 100px"
+                    alt="Project image" />
+                  {{ form.id }} {{ form.DELETE }}
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-image-btn">
+                    ×
+                  </button>
+                </div>
+                {% endif %} {% endfor %}
+              </div>
+
+              <!-- New images container -->
+              <div id="image-formset" class="mb-3"></div>
+
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                id="add-image-btn">
+                <i class="fas fa-plus me-1"></i>Add Image
+              </button>
+            </div>
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                Update Project
+              </button>
+              <a
+                href="{% url 'projects:project_detail' pk=project.pk %}"
+                class="btn btn-outline-secondary"
+                >Cancel</a
+              >
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const fileInputs = document.querySelectorAll('input[type="file"]');
-    fileInputs.forEach(input => input.classList.add('form-control'));
-
-    const formInputs = document.querySelectorAll('input:not([type="file"]):not([type="hidden"]), textarea, select');
-    formInputs.forEach(input => input.classList.add('form-control'));
-
-    // Tags handling
-    const tagBadges = document.querySelectorAll('.tag-badge');
-    const tagsInput = document.getElementById('id_tags');
-    const newTagInput = document.getElementById('new-tag-input');
-
-    function updateTagsInput() {
-        const selectedTags = [...document.querySelectorAll('.tag-badge.active')].map(tag => tag.dataset.tag);
-        tagsInput.value = selectedTags.join(',');
-    }
-
-    tagBadges.forEach(badge => {
-        badge.addEventListener('click', () => {
-            badge.classList.toggle('active');
-            updateTagsInput();
-        });
-    });
-
-    newTagInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const value = this.value.trim();
-            if (value && ![...document.querySelectorAll('.tag-badge')].some(b => b.dataset.tag === value)) {
-                const span = document.createElement('span');
-                span.className = 'badge rounded-pill px-3 py-2 bg-primary text-white tag-badge active';
-                span.dataset.tag = value;
-                span.innerText = value;
-                span.addEventListener('click', function () {
-                    this.classList.toggle('active');
-                    updateTagsInput();
-                });
-                document.getElementById('tag-badges').appendChild(span);
-                updateTagsInput();
-                this.value = '';
-            }
-        }
-    });
-
-    // Image formset
-    const addImageBtn = document.getElementById('add-image-btn');
-    const imageFormset = document.getElementById('image-formset');
-    const totalForms = document.querySelector('#id_form-TOTAL_FORMS');
-
-    addImageBtn.addEventListener('click', function () {
-        const formCount = parseInt(totalForms.value);
-        const newDiv = document.createElement('div');
-        newDiv.className = 'image-form border rounded p-2 mb-2 position-relative';
-
-        newDiv.innerHTML = `
-            <input type="file" name="form-${formCount}-image" id="id_form-${formCount}-image" class="form-control mb-2" required>
-            <input type="hidden" name="form-${formCount}-id" id="id_form-${formCount}-id">
-            <input type="checkbox" name="form-${formCount}-DELETE" id="id_form-${formCount}-DELETE" style="display:none">
-            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-image-btn">&times;</button>
-        `;
-
-        imageFormset.appendChild(newDiv);
-        totalForms.value = formCount + 1;
-    });
-
-    // remove image dynamically
-    document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('remove-image-btn')) {
-            const container = e.target.closest('.image-form') || e.target.closest('.position-relative');
-            const deleteCheckbox = container.querySelector('input[type="checkbox"]');
-            if (deleteCheckbox) {
-                deleteCheckbox.checked = true;
-                container.style.display = 'none';
-            } else {
-                container.remove();
-            }
-        }
-        });
-});
-</script>
-
+{% endblock %} {% block extra_css %}
 <style>
-.tag-badge {
+  .tag-badge {
     cursor: pointer;
     transition: 0.2s;
-}
-.tag-badge.active {
+  }
+  .tag-badge.active {
     background-color: #0d6efd !important;
     color: white !important;
-}
-.image-form {
+  }
+  .image-form {
     background-color: #f8f9fa;
-}
-.remove-image-btn {
+  }
+  .remove-image-btn {
     border: none;
     background: none;
     font-size: 1.2rem;
     color: #dc3545;
-}
+  }
 </style>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach((input) => input.classList.add("form-control"));
+
+    const formInputs = document.querySelectorAll(
+      'input:not([type="file"]):not([type="hidden"]), textarea, select'
+    );
+    formInputs.forEach((input) => input.classList.add("form-control"));
+
+    // Tags handling
+    const tagBadges = document.getElementById("tag-badges");
+    const tagsInput = document.getElementById("id_tags_input");
+    const newTagInput = document.getElementById("new-tag-input");
+
+    function updateTagsInput() {
+      const tags = [...tagBadges.querySelectorAll(".tag-badge.active")].map(
+        (badge) => badge.dataset.tag
+      );
+      tagsInput.value = tags.join(",");
+    }
+
+    // Handle removing tags
+    tagBadges.addEventListener("click", (e) => {
+      if (e.target.classList.contains("remove-tag")) {
+        e.target.closest(".tag-badge").remove();
+        updateTagsInput();
+      }
+    });
+
+    // Handle adding new tags
+    newTagInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const tagName = this.value.trim();
+
+        if (tagName) {
+          const existingTags = [
+            ...tagBadges.querySelectorAll(".tag-badge"),
+          ].map((badge) => badge.dataset.tag.toLowerCase());
+
+          if (!existingTags.includes(tagName.toLowerCase())) {
+            const span = document.createElement("span");
+            span.className =
+              "badge rounded-pill px-3 py-2 bg-primary text-white tag-badge active";
+            span.dataset.tag = tagName;
+            span.innerHTML = `
+                        ${tagName}
+                        <i class="fas fa-times ms-2 remove-tag"></i>
+                    `;
+            tagBadges.appendChild(span);
+            updateTagsInput();
+          }
+          this.value = "";
+        }
+      }
+    });
+
+    // Initial tags setup
+    updateTagsInput();
+
+    // Image formset handling
+    const addImageBtn = document.getElementById("add-image-btn");
+    const imageFormset = document.getElementById("image-formset");
+    const existingImages = document.getElementById("existing-images");
+    const totalFormsInput = document.querySelector('[name="form-TOTAL_FORMS"]');
+    const maxForms = 5;
+
+    function getCurrentImageCount() {
+      const visibleExisting = existingImages.querySelectorAll(
+        '.image-container:not([style*="display: none"])'
+      ).length;
+      const newForms = imageFormset.querySelectorAll(".image-form").length;
+      return visibleExisting + newForms;
+    }
+
+    function createImageForm(index) {
+      const div = document.createElement("div");
+      div.className = "image-form border rounded p-2 mb-2 position-relative";
+      div.innerHTML = `
+            <input type="file" 
+                   name="form-${index}-image" 
+                   id="id_form-${index}-image" 
+                   class="form-control mb-2" 
+                   accept="image/*"
+                   required>
+            <input type="hidden" 
+                   name="form-${index}-id" 
+                   id="id_form-${index}-id">
+            <button type="button" 
+                    class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-image-btn">
+                ×
+            </button>
+        `;
+      return div;
+    }
+
+    function updateTotalForms() {
+      if (totalFormsInput) {
+        const forms = imageFormset.querySelectorAll(".image-form");
+        totalFormsInput.value =
+          forms.length +
+          existingImages.querySelectorAll(".image-container").length;
+      }
+    }
+
+    // Add image button handler
+    addImageBtn.addEventListener("click", function () {
+      if (!totalFormsInput) {
+        console.error("Management form not found");
+        return;
+      }
+
+      const currentCount = getCurrentImageCount();
+      if (currentCount >= maxForms) {
+        alert(`Maximum ${maxForms} images allowed`);
+        return;
+      }
+
+      const formCount = parseInt(totalFormsInput.value);
+      const newForm = createImageForm(formCount);
+
+      // Add event listener to the new file input
+      const fileInput = newForm.querySelector('input[type="file"]');
+      fileInput.addEventListener("change", function () {
+        if (this.files && this.files[0]) {
+          // Enable adding another image after file is selected
+          addImageBtn.disabled = false;
+        }
+      });
+
+      imageFormset.appendChild(newForm);
+      updateTotalForms();
+
+      // Disable add button until file is selected
+      addImageBtn.disabled = true;
+    });
+
+    // Remove image handler
+    document.addEventListener("click", function (e) {
+      if (e.target.classList.contains("remove-image-btn")) {
+        const container =
+          e.target.closest(".image-form") ||
+          e.target.closest(".image-container");
+        if (!container) return;
+
+        const deleteCheckbox = container.querySelector(
+          'input[name$="-DELETE"]'
+        );
+        if (deleteCheckbox) {
+          deleteCheckbox.checked = true;
+          container.style.display = "none";
+        } else {
+          container.remove();
+        }
+
+        updateTotalForms();
+        addImageBtn.disabled = false;
+      }
+    });
+  });
+</script>
+
 {% endblock %}

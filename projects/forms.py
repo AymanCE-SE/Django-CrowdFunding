@@ -14,17 +14,14 @@ class ProjectForm(forms.ModelForm):
         })
     )
     
-    tags = forms.ModelMultipleChoiceField(
-        queryset=Tag.objects.all(),
-        widget=forms.CheckboxSelectMultiple(attrs={
-            'class': 'form-check-input'
-        }),
-        required=False
+    tags_input = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput()
     )
 
     class Meta:
         model = Project
-        fields = ['title', 'category', 'details', 'total_target', 'tags', 'start_time', 'end_time']
+        fields = ['title', 'category', 'details', 'total_target', 'start_time', 'end_time']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',

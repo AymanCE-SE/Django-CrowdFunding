@@ -45,7 +45,7 @@ class Project(models.Model):
     )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    tags = models.ManyToManyField('Tag')
+    tags = models.ManyToManyField(Tag)
     donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 

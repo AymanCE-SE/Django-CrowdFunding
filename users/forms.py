@@ -84,7 +84,9 @@ class LoginForm(AuthenticationForm):
 
 class CustomPasswordResetForm(PasswordResetForm):
     def clean_email(self):
-        email = self.cleaned_data['email']
+        email = self.cleaned_data.get('email')
+        if not email:
+            raise forms.ValidationError("Please enter a valid email address.")
         if not User.objects.filter(email=email).exists():
             raise forms.ValidationError("This email address is not registered.")
         return email

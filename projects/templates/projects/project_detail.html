@@ -12,6 +12,12 @@
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <h1 class="h2 mb-2">{{ project.title }}</h1>
+                            <button class="btn btn-sm btn-outline-danger report-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#reportModal"
+                                    data-type="project"
+                                    data-id="{{ project.id }}">Report Project </button>
+
                             <p class="text-muted mb-0">
                                 <i class="fas fa-calendar-alt me-2"></i>Created {{ project.created_at|date }}
                             </p>
@@ -122,42 +128,55 @@
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{% static 'images/profile.png' %}" 
-                                                         class="rounded-circle me-2" 
-                                                         width="32" height="32" 
-                                                         alt="{{ comment.user.username }}">
+                                                    <img src="{% static 'images/profile.png' %}" class="rounded-circle me-2" width="32" height="32" alt="{{ comment.user.username }}">
                                                     <h6 class="card-subtitle mb-0">{{ comment.user.username }}</h6>
                                                 </div>
                                                 <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
                                             </div>
                                             <p class="card-text mb-1">{{ comment.text }}</p>
-                                            <!-- Reply Button -->
+                                    
                                             {% if user.is_authenticated %}
                                             <button class="btn btn-link btn-sm reply-btn" data-comment-id="{{ comment.id }}">Reply</button>
-                                            {% endif %}
-                                            <!-- Reply Form (hidden by default) -->
+                                            <button class="btn btn-sm btn-outline-danger report-btn" data-bs-toggle="modal" data-bs-target="#reportModal" data-type="comment" data-id="{{ comment.id }}">
+                                                Report
+                                              </button>
                                             <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display:none;">
                                                 <form method="post" action="{% url 'projects:add_comment' pk=project.pk %}">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="parent" value="{{ comment.id }}">
-                                                    <div class="form-group mt-2">
-                                                        <textarea name="text" class="form-control reply-text" rows="2" placeholder="Write your reply..."></textarea>
-                                                    </div>
+                                                    <textarea name="text" class="form-control reply-text" rows="2" placeholder="Write your reply..."></textarea>
                                                     <button type="submit" class="btn btn-sm btn-primary mt-2">Submit Reply</button>
                                                 </form>
                                             </div>
+                                            {% endif %}
+                                    
+                                            <!-- Replies -->
+                                            {% for reply in comment.replies.all %}
+                                            <div class="card bg-white border mt-2 ms-4">
+                                                <div class="card-body py-2 px-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="{% static 'images/profile.png' %}" class="rounded-circle me-2" width="28" height="28" alt="{{ reply.user.username }}">
+                                                            <small class="fw-bold">{{ reply.user.username }}</small>
+                                                            <span class="text-muted mx-1">↪</span>
+                                                            <small class="text-muted">Reply to {{ comment.user.username }}</small>
+                                                        </div>
+                                                        <small class="text-muted">{{ reply.created_at|timesince }} ago</small>
+                                                    </div>
+                                                    <p class="mb-0">{{ reply.text }}</p>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                     {% empty %}
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-comments fa-2x mb-3"></i>
-                                        <p>No comments yet. Be the first to comment!</p>
-                                    </div>
+                                    <p class="text-muted">No comments yet.</p>
                                     {% endfor %}
+
                                 </div>
                             </div>
                         </div>
-
+                        
                         <!-- Updates Tab -->
                         <div class="tab-pane fade" id="updates">
                             <div class="p-3">
@@ -172,93 +191,93 @@
             </div>
         </div>
 
-        <!-- Sidebar Content -->
-        <div class="col-lg-4">
-            <!-- Project Status -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h2 class="card-title h4 mb-3">{{ project.title }}</h2>
-                    <div class="progress mb-3">
-                        <div class="progress-bar bg-success" role="progressbar" 
-                             style="width: {{ project.progress }}%"
-                             aria-valuenow="{{ project.progress }}" 
-                             aria-valuemin="0" aria-valuemax="100">
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-4">
-                        <div class="text-center">
-                            <h6 class="mb-1">Raised</h6>
-                            <h4 class="text-success mb-0">{{ total_donations }} EGP</h4>
-                        </div>
-                        <div class="text-center">
-                            <h6 class="mb-1">Target</h6>
-                            <h4 class="mb-0">{{ project.total_target }} EGP</h4>
-                        </div>
-                    </div>
+    <!-- Sidebar Content -->
+<div class="col-lg-4">
+    <!-- Project Status -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="card-title h4 mb-3">{{ project.title }}</h2>
+            <div class="progress mb-3">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {{ project.progress }}%"
+                     aria-valuenow="{{ project.progress }}" 
+                     aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
 
+            <div class="d-flex justify-content-between mb-4">
+                <div class="text-center">
+                    <h6 class="mb-1">Raised</h6>
+                    <h4 class="text-success mb-0">{{ total_donations }} EGP</h4>
+                </div>
+                <div class="text-center">
+                    <h6 class="mb-1">Target</h6>
+                    <h4 class="mb-0">{{ project.total_target }} EGP</h4>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span><i class="fas fa-clock me-2"></i>Time Remaining</span>
+                    <strong>{{ project.time_remaining }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span><i class="fas fa-users me-2"></i>Backers</span>
+                    <strong>{{ project.get_donation_stats.total_donors }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-star me-2"></i>Rating</span>
+                    <strong id="avg-rating">{{ average_rating|default:"No ratings" }}</strong>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+                {% with status=project.get_status %}
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span><i class="fas fa-clock me-2"></i>Time Remaining</span>
-                            <strong>{{ project.time_remaining }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span><i class="fas fa-users me-2"></i>Backers</span>
-                            <strong>{{ project.get_donation_stats.total_donors }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-star me-2"></i>Rating</span>
-                            <strong>{{ average_rating|default:"No ratings" }}</strong>
-                        </div>
-                    </div>
-
-                    {% if user.is_authenticated %}
-                        {% with status=project.get_status %}
-                            <div class="mb-4">
-                                {% if status == 'coming_soon' %}
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-clock me-2"></i>{{ project.get_status_message }}
-                                    </div>
-                                    <button class="btn btn-secondary btn-lg w-100" disabled>
-                                        <i class="fas fa-clock me-2"></i>Coming Soon
-                                    </button>
-                                {% elif status == 'ended' %}
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-circle me-2"></i>{{ project.get_status_message }}
-                                    </div>
-                                    <button class="btn btn-secondary btn-lg w-100" disabled>
-                                        <i class="fas fa-times-circle me-2"></i>Project Ended
-                                    </button>
-                                {% elif status == 'funded' %}
-                                    <div class="alert alert-success">
-                                        <i class="fas fa-check-circle me-2"></i>{{ project.get_status_message }}
-                                    </div>
-                                    <button class="btn btn-success btn-lg w-100" disabled>
-                                        <i class="fas fa-check-circle me-2"></i>Fully Funded
-                                    </button>
-                                {% else %}
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Target:</strong> {{ project.total_target|floatformat:2 }} EGP<br>
-                                        <strong>Still Needed:</strong> {{ project.get_status_message }}
-                                    </div>
-                                    <a href="{% url 'projects:donate_to_project' pk=project.pk %}" 
-                                       class="btn btn-success btn-lg w-100">
-                                        <i class="fas fa-hand-holding-usd me-2"></i>Donate Now
-                                    </a>
-                                {% endif %}
+                        {% if status == 'coming_soon' %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-clock me-2"></i>{{ project.get_status_message }}
                             </div>
-                        {% endwith %}
-                    {% else %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>Please login to donate
-                        </div>
-                        <a href="{% url 'login' %}?next={{ request.path }}" 
-                           class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login to Donate
-                        </a>
-                    {% endif %}
-                    
+                            <button class="btn btn-secondary btn-lg w-100" disabled>
+                                <i class="fas fa-clock me-2"></i>Coming Soon
+                            </button>
+                        {% elif status == 'ended' %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ project.get_status_message }}
+                            </div>
+                            <button class="btn btn-secondary btn-lg w-100" disabled>
+                                <i class="fas fa-times-circle me-2"></i>Project Ended
+                            </button>
+                        {% elif status == 'funded' %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>{{ project.get_status_message }}
+                            </div>
+                            <button class="btn btn-success btn-lg w-100" disabled>
+                                <i class="fas fa-check-circle me-2"></i>Fully Funded
+                            </button>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Target:</strong> {{ project.total_target|floatformat:2 }} EGP<br>
+                                <strong>Still Needed:</strong> {{ project.get_status_message }}
+                            </div>
+                            <a href="{% url 'projects:donate_to_project' pk=project.pk %}" 
+                               class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-hand-holding-usd me-2"></i>Donate Now
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Please login to donate
+                </div>
+                <a href="{% url 'login' %}?next={{ request.path }}" 
+                   class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login to Donate
+                </a>
+            {% endif %}
+
                     <!-- Interactive Rating Widget -->
                     {% if user.is_authenticated and not is_owner %}
                     <div id="rating-widget" data-current-rating="{{ user_rating|default:0 }}" data-project-id="{{ project.pk }}">
@@ -281,41 +300,76 @@
                     
                 </div>
             </div>
-
-            <!-- Creator Info -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Project Creator</h5>
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="{% static 'images/profile.png' %}" 
-                             class="rounded-circle me-3" 
-                             width="50" height="50" 
-                             alt="{{ project.created_by.username }}">
-                        <div>
-                            <h6 class="mb-0">{{ project.created_by.username }}</h6>
-                            <small class="text-muted">Member since {{ project.created_by.date_joined|date }}</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top Donors -->
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Top Supporters</h5>
-                    {% for donor in project.get_top_donors %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span>{{ donor.user__username }}</span>
-                        <strong>{{ donor.total_amount }} EGP</strong>
-                    </div>
-                    {% empty %}
-                    <p class="text-muted">No donations yet.</p>
-                    {% endfor %}
+            
+    <!-- Creator Info -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Project Creator</h5>
+            <div class="d-flex align-items-center mb-3">
+                <img src="{% static 'images/profile.png' %}" 
+                     class="rounded-circle me-3" 
+                     width="50" height="50" 
+                     alt="{{ project.created_by.username }}">
+                <div>
+                    <h6 class="mb-0">{{ project.created_by.username }}</h6>
+                    <small class="text-muted">Member since {{ project.created_by.date_joined|date }}</small>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Top Donors -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Top Supporters</h5>
+            {% for donor in project.get_top_donors %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>{{ donor.user__username }}</span>
+                <strong>{{ donor.total_amount }} EGP</strong>
+            </div>
+            {% empty %}
+            <p class="text-muted">No donations yet.</p>
+            {% endfor %}
+        </div>
+    </div>
 </div>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="reportForm">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="reportModalLabel">Report Content</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="report_type" id="reportType">
+            <input type="hidden" name="object_id" id="reportObjectId">
+            <div class="mb-3">
+                <label for="reportReason" class="form-label">Reason</label>
+                <select name="reason" id="reportReason" class="form-select" required>
+                    <option value="" disabled selected>Select reason</option>
+                    <option value="spam">Spam</option>
+                    <option value="inappropriate">Inappropriate Content</option>
+                    <option value="harassment">Harassment</option>
+                    <option value="fraud">Fraud</option>
+                    <option value="copyright">Copyright Violation</option>
+                    <option value="offensive">Offensive Content</option>
+                    <option value="hate_speech">Hate Speech</option>
+                    <option value="false_information">False Information</option>
+                    <option value="other">Other</option>
+                  </select>
+              </div>              
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-danger">Submit Report</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block extra_css %}
@@ -333,35 +387,6 @@
 .carousel:hover .project-img {
     transform: scale(1.02);
 }
-
-/* Navigation Pills */
-.nav-pills .nav-link {
-    color: #6c757d;
-    background-color: transparent;
-    border: 1px solid #dee2e6;
-    margin: 0 4px;
-}
-.nav-pills .nav-link.active {
-    background-color: #0d6efd;
-    color: #fff;
-    border-color: #0d6efd;
-}
-
-/* Comments and Card Styles */
-.comments-list {
-    max-height: 500px;
-    overflow-y: auto;
-}
-.card {
-    border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
 /* Star Rating Widget */
 .star-rating .fa-star {
     font-size: 1.5rem;
@@ -370,7 +395,7 @@
     margin-right: 5px;
 }
 
-/* Comment Reply Styles */
+/* Reply Form Styling */
 .reply-form-container {
     background: #f9f9f9;
     border: 1px solid #e0e0e0;
@@ -382,97 +407,128 @@
     resize: vertical;
 }
 
-/* Progress Bar */
-.progress {
-    height: 10px;
-    border-radius: 5px;
-    background-color: #e9ecef;
+/* Carousel Custom */
+.project-img {
+    height: 400px;
+    object-fit: cover;
 }
-.progress-bar {
-    transition: width 1.5s ease-in-out;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .nav-pills .nav-link {
-        margin: 4px 0;
-    }
-}
-</style>
+    </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Rating widget interactivity
-    const ratingWidget = document.getElementById('rating-widget');
-    if (ratingWidget) {
-        const stars = ratingWidget.querySelectorAll('.rating-star');
-        const ratingInput = document.getElementById('rating-score');
-        let currentRating = parseInt(ratingWidget.dataset.currentRating, 10) || 0;
-
-        function updateStars(rating) {
+    document.addEventListener('DOMContentLoaded', function () {
+        // Rating Widget
+/*************  ✨ Windsurf Command 🌟  *************/
+        const ratingWidget = document.getElementById('rating-widget');
+        if (ratingWidget) {
+            const stars = ratingWidget.querySelectorAll('.rating-star');
+            const ratingInput = document.getElementById('rating-score');
+            let currentRating = parseInt(ratingWidget.dataset.currentRating, 10) || 0;
+    
+            function updateStars(rating) {
+                stars.forEach(function(star) {
+                    const starScore = parseInt(star.dataset.score, 10);
+                    if (starScore <= rating) {
+                        star.classList.remove('far');
+                        star.classList.add('fas');
+                    } else {
+                        star.classList.remove('fas');
+                        star.classList.add('far');
+                    }
+                });
+            }
+    
+            updateStars(currentRating);
+    
             stars.forEach(function(star) {
-                const starScore = parseInt(star.dataset.score, 10);
-                if (starScore <= rating) {
-                    star.classList.remove('far');
-                    star.classList.add('fas');
-                } else {
-                    star.classList.remove('fas');
-                    star.classList.add('far');
-                }
+                star.addEventListener('click', function () {
+                    const selectedRating = parseInt(this.dataset.score, 10);
+                    ratingInput.value = selectedRating;
+                    updateStars(selectedRating);
+                });
+            });
+    
+            const ratingForm = document.getElementById('rating-form');
+            ratingForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(ratingForm);
+                fetch(ratingForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: formData,
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('avg-rating').textContent = data.new_average.toFixed(2);
+                    alert("Thanks! Your rating has been submitted.");
+                })
+                .catch(error => {
+                    console.error('Error submitting rating:', error);
+                });
             });
         }
-        updateStars(currentRating);
-
-        stars.forEach(function(star) {
-            star.addEventListener('click', function () {
-                const selectedRating = parseInt(this.dataset.score, 10);
-                // Update the hidden input and visual stars
-                ratingInput.value = selectedRating;
-                updateStars(selectedRating);
+/*******  2ad34b30-72cc-46ff-bacf-4670b5dfd663  *******/
+    
+        // Reply Button Toggle
+        const replyButtons = document.querySelectorAll('.reply-btn');
+        replyButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const commentId = this.dataset.commentId;
+                const replyForm = document.getElementById('reply-form-' + commentId);
+                if (replyForm.style.display === 'none' || replyForm.style.display === '') {
+                    replyForm.style.display = 'block';
+                } else {
+                    replyForm.style.display = 'none';
+                }
             });
         });
-
-        // Optional: intercept the rating form submission to handle via AJAX.
-        const ratingForm = document.getElementById('rating-form');
-        ratingForm.addEventListener('submit', function (e) {
+    
+        // Report Modal Script
+        const reportButtons = document.querySelectorAll('.report-btn');
+        const reportForm = document.getElementById('reportForm');
+    
+        reportButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.dataset.type;
+                const objectId = button.dataset.id;
+                document.getElementById('reportType').value = type;
+                document.getElementById('reportObjectId').value = objectId;
+                document.getElementById('reportReason').value = '';
+            });
+        });
+    
+        reportForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const formData = new FormData(ratingForm);
-            fetch(ratingForm.action, {
+            const formData = new FormData(reportForm);
+    
+            fetch('{% url "projects:submit_report" %}', {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
-                body: formData,
+                body: formData
             })
-            .then(response => {
-                if (response.ok) {
-                    console.log('Rating submitted successfully.');
-                    // Optionally update UI elements or show a success message
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Report submitted successfully.');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('reportModal'));
+                    modal.hide();
                 } else {
-                    throw new Error('Network response was not ok.');
+                    alert('Error: ' + data.message);
                 }
             })
             .catch(error => {
-                console.error('Error submitting rating:', error);
+                alert('An error occurred.');
+                console.error(error);
             });
         });
-    }
-
-    // Reply form toggle for comments
-    const replyButtons = document.querySelectorAll('.reply-btn');
-    replyButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            const commentId = this.dataset.commentId;
-            const replyForm = document.getElementById('reply-form-' + commentId);
-            if (replyForm.style.display === 'none' || replyForm.style.display === '') {
-                replyForm.style.display = 'block';
-            } else {
-                replyForm.style.display = 'none';
-            }
-        });
     });
-});
-</script>
+    </script>
 {% endblock %}

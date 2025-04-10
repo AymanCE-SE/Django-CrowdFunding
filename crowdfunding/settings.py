@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',  
     'projects',
     'widget_tweaks',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [

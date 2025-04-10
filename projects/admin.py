@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Project, ProjectImage, Tag, Donation, Comment, Rating
+from .models import Category, Project, ProjectImage, Tag, Donation, Comment, Rating, Report
 
 class ProjectImageInline(admin.TabularInline):
     model = ProjectImage
@@ -54,3 +54,9 @@ class RatingAdmin(admin.ModelAdmin):
     list_filter = ('score', 'created_at')
     search_fields = ('user__username', 'project__title')
     readonly_fields = ('created_at',)
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('reporter', 'report_type', 'project', 'comment', 'reason', 'created_at')
+    list_filter = ('report_type', 'created_at')
+    search_fields = ('reason', 'reporter__username')

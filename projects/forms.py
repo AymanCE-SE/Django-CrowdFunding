@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Project, ProjectImage, Tag, Donation, Comment, Rating, Category
+from .models import Project, ProjectImage, Tag, Donation, Comment, Rating, Category, Report
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -102,4 +102,13 @@ class RatingForm(forms.ModelForm):
         fields = ['score']
         widgets = {
             'score': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 5, 'placeholder': 'Rate from 1 to 5'}),
+        }
+
+
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['reason']
+        widgets = {
+            'reason': forms.Select(attrs={'class': 'form-select'})
         }

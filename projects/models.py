@@ -29,13 +29,20 @@ class Tag(models.Model):
 
 
 class Project(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('running', 'Running'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
+    ]
+
     title = models.CharField(max_length=200)
     details = models.TextField()
     total_target = models.DecimalField(max_digits=10, decimal_places=2)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='created_projects'  # Add this for easier access to user's projects
+        related_name='created_projects'  
     )
     category = models.ForeignKey(
         'Category', 
@@ -47,9 +54,19 @@ class Project(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     average_rating = models.FloatField(default=0, blank=True)
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(
+        'Tag', 
+        related_name='projects',
+        blank=True  # Make tags optional
+    )
     donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_featured = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
 
     class Meta:
         ordering = ['-created_at']

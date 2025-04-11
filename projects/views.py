@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Avg, Sum, F
+from django.db.models import Avg, Sum, F, Count
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db import transaction
 from django.http import JsonResponse
+from django.utils import timezone
+from django.conf import settings
+from users.models import CustomUser  
 
 from .forms import (
     ProjectForm, 
@@ -24,9 +27,10 @@ from .models import (
     Rating,
     Category,
     Tag,
-    Report
+    Report,
 )
 import json
+from django.db import models  # Add this import
 from django.db.models import Avg
 
 
@@ -339,15 +343,44 @@ def delete_project(request, pk):
 
 
 def project_list(request):
-    projects = Project.objects.all().prefetch_related('images').order_by('-created_at')
+    projects = Project.objects.all()
+    
+    # Handle search
+    query = request.GET.get('q', '')
+    if query:
+        # Using Q objects for complex queries
+        projects = projects.filter(
+            models.Q(title__icontains=query) |
+            models.Q(tags__name__icontains=query)
+        ).distinct()
+
+    # Handle category filter
+    category_id = request.GET.get('category')
+    if category_id:
+        projects = projects.filter(category_id=category_id)
+
+    # Handle sorting
+    sort = request.GET.get('sort', '')
+    if sort == 'newest':
+        projects = projects.order_by('-created_at')
+    elif sort == 'most_funded':
+        projects = projects.order_by('-donated_amount')
+    elif sort == 'ending_soon':
+        projects = projects.order_by('end_time')
+
+    # Pagination
     paginator = Paginator(projects, 12)
     page = request.GET.get('page')
     projects = paginator.get_page(page)
-    
-    return render(request, 'projects/project_list.html', {
+
+    context = {
         'projects': projects,
         'categories': Category.objects.all(),
-    })
+        'search_query': query,
+        'active_category': category_id,
+        'active_sort': sort
+    }
+    return render(request, 'projects/project_list.html', context)
     
     
 # @login_required
@@ -397,3 +430,79 @@ def submit_report(request, project_id):
         return JsonResponse({'success': True, 'message': 'Report submitted.'})
     
     return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
+
+from django.db.models import Avg, Count
+from django.utils import timezone
+
+def home(request):
+    now = timezone.now()
+    active_projects = Project.objects.filter(
+        start_time__lte=now,
+        end_time__gte=now
+    )
+
+    # Static testimonials data
+    testimonials = [
+        {
+            'name': 'John Doe',
+            'role': 'Regular Donor',
+            'content': 'I\'ve supported multiple projects through this platform. It\'s amazing to see the direct impact of my contributions!',
+            'image': 'static/images/testimonials/donor1.jpg',
+            'rating': 5
+        },
+        {
+            'name': 'Sarah Wilson',
+            'role': 'Project Creator',
+            'content': 'This platform made it easy to bring my project to life. The community here is incredibly supportive.',
+            'image': 'static/images/testimonials/creator1.jpg',
+            'rating': 5
+        },
+        {
+            'name': 'Michael Brown',
+            'role': 'Tech Enthusiast',
+            'content': 'The transparency and ease of use make this platform stand out. I love tracking the progress of projects I support.',
+            'image': 'static/images/testimonials/donor2.jpg',
+            'rating': 4
+        }
+    ]
+
+    # Get top donors
+    top_donors = CustomUser.objects.annotate(
+        total_donated=Sum('donation__amount')
+    ).filter(
+        total_donated__gt=0
+    ).order_by('-total_donated')[:5]
+
+    # Get overall statistics
+    total_projects = Project.objects.count()
+    total_donors = CustomUser.objects.filter(donation__isnull=False).distinct().count()
+    total_donated = Donation.objects.aggregate(total=Sum('amount'))['total'] or 0
+
+    context = {
+        'top_rated_projects': active_projects.annotate(
+            avg_rating=Avg('ratings__score')
+        ).filter(
+            avg_rating__isnull=False
+        ).order_by('-avg_rating')[:5],
+        
+        'latest_projects': active_projects.order_by(
+            '-created_at'
+        )[:5],
+        
+        'featured_projects': active_projects.filter(
+            is_featured=True
+        )[:5],
+        
+        'categories': Category.objects.annotate(
+            projects_count=Count('projects')
+        ).order_by('-projects_count'),
+        
+        'top_donors': top_donors,
+        'total_projects': total_projects,
+        'total_donors': total_donors,
+        'total_donated': total_donated,
+        'testimonials': testimonials,  
+        'active_category': request.GET.get('category')
+    }
+    return render(request, 'home.html', context)

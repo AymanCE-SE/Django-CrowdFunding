@@ -10,14 +10,7 @@
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
               <h1 class="h2 mb-2">{{ project.title }}</h1>
-              <button
-                class="btn btn-sm btn-outline-danger report-btn"
-                data-bs-toggle="modal"
-                data-bs-target="#reportModal"
-                data-type="project"
-                data-id="{{ project.id }}">
-                Report Project
-              </button>
+
 
               <p class="text-muted mb-0">
                 <i class="fas fa-calendar-alt me-2"></i>Created {{ project.created_at|date }}
@@ -50,6 +43,17 @@
                 {% endif %}
               </ul>
             </div>
+            {% else %}
+            <button
+            type="button"
+            class="btn btn-sm btn-outline-danger report-btn"
+            data-bs-toggle="modal"
+            data-bs-target="#reportModal"
+            data-type="project"
+            data-id="{{ project.id }}">
+            <i class="fa-solid fa-flag" style="color: #a80000;"></i>
+            <span class="visually-hidden">Report Project</span>
+            </button>
             {% endif %}
           </div>
 
@@ -186,9 +190,9 @@
 
                       {% if user.is_authenticated %}
                       <button
-                        class="btn btn-link btn-sm reply-btn"
+                        class="btn btn-outline-primary btn-sm reply-btn"
                         data-comment-id="{{ comment.id }}">
-                        Reply
+                        <i class="fas fa-reply me-1"></i>Reply
                       </button>
                       <button
                         class="btn btn-sm btn-outline-danger report-btn"
@@ -196,7 +200,8 @@
                         data-bs-target="#reportModal"
                         data-type="comment"
                         data-id="{{ comment.id }}">
-                        Report
+                        <i class="fa-solid fa-flag" style="color: #a80000;"></i>
+                        <span class="visually-hidden">Report comment</span>
                       </button>
                       <div
                         class="reply-form-container"
@@ -240,7 +245,7 @@
                               <small class="fw-bold"
                                 >{{ reply.user.username }}</small
                               >
-                              <span class="text-muted mx-1">↪</span>
+                              <span class="text-muted mx-1"><i class="fa-solid fa-reply text-primary"></i></span>
                               <small class="text-muted"
                                 >Reply to {{ comment.user.username }}</small
                               >

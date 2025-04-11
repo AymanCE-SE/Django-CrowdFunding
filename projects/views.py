@@ -106,6 +106,7 @@ def project_detail(request, pk):
         'comment_form': CommentForm() if request.user.is_authenticated else None,
         'user_rating': user_rating,
         'is_owner': is_owner,
+        'related_projects': project.get_related_projects(),
     }
 
     if messages.get_messages(request):

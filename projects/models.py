@@ -206,6 +206,17 @@ class Project(models.Model):
         self.average_rating = self.calculate_average_rating()
         self.save(update_fields=['average_rating'])
 
+    def get_related_projects(self):
+        """Get related projects based on category and tags"""
+        return Project.objects.filter(
+            models.Q(category=self.category) | 
+            models.Q(tags__in=self.tags.all())
+        ).exclude(
+            id=self.id
+        ).distinct().order_by(
+            '-created_at'
+        )[:5]
+
 
 class ProjectImage(models.Model):
     project = models.ForeignKey(

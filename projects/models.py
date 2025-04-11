@@ -291,4 +291,3 @@ class Report(models.Model):
 
     def __str__(self):
         return f"{self.report_type} report by {self.reporter}"
-

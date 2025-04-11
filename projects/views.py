@@ -378,20 +378,20 @@ def project_list(request):
         
 #     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
 
+
 @login_required
-def submit_report(request):
+def submit_report(request, project_id):
     if request.method == 'POST':
         report_type = request.POST.get('report_type')
-        project_id = request.POST.get('project_id')
-        comment_id = request.POST.get('comment_id')
+        object_id = request.POST.get('object_id') 
         reason = request.POST.get('reason')
 
         report = Report(reporter=request.user, reason=reason, report_type=report_type)
 
-        if report_type == 'project' and project_id:
-            report.project = Project.objects.get(id=project_id)
-        elif report_type == 'comment' and comment_id:
-            report.comment = Comment.objects.get(id=comment_id)
+        if report_type == 'project':
+            report.project = get_object_or_404(Project, id=project_id)
+        elif report_type == 'comment':
+            report.comment = get_object_or_404(Comment, id=object_id)
 
         report.save()
         return JsonResponse({'success': True, 'message': 'Report submitted.'})

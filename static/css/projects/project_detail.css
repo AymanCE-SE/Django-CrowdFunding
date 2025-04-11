@@ -1,0 +1,38 @@
+/* Carousel Styles */
+.carousel {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .project-img {
+    height: 400px;
+    object-fit: cover;
+    transition: transform 0.3s ease-in-out;
+  }
+  .carousel:hover .project-img {
+    transform: scale(1.02);
+  }
+  /* Star Rating Widget */
+  .star-rating .fa-star {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #f0ad4e;
+    margin-right: 5px;
+  }
+
+  /* Reply Form Styling */
+  .reply-form-container {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 8px;
+  }
+  .reply-text {
+    resize: vertical;
+  }
+
+  /* Carousel Custom */
+  .project-img {
+    height: 400px;
+    object-fit: cover;
+  }

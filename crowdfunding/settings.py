@@ -41,6 +41,12 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'projects',
     'widget_tweaks',
+    'django.contrib.sites',  # Required by django-allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',  # Add Google provider
+    'allauth.socialaccount.providers.google',  # Add Google provider
 ]
 
 MIDDLEWARE = [
@@ -51,6 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Add the account middleware:
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'crowdfunding.urls'
@@ -70,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',
             ],
         },
     },
@@ -157,4 +166,36 @@ EMAIL_HOST_PASSWORD = 'kfmj pwif wxxi yxza '
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
     messages.SUCCESS: 'success',
+}
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+]
+
+SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        # For each OAuth based provider, either add a ``SocialApp``
+        # (``socialaccount`` app) containing the required client
+        # credentials, or list them here:
+        'APP': {
+            'client_id': '462110296928018',
+            'secret': '4530bac96428f0588d9aeb32bc919879'
+            },
+        'AUTH_PARAMS': {
+            'auth_type': 'reauthenticate',
+        },
+            
+    },
+    'google': {
+        # For each OAuth based provider, either add a ``SocialApp``
+        # (``socialaccount`` app) containing the required client
+        # credentials, or list them here:
+        'APP': {
+            'client_id': '1090570282885-im5evf8n7mick9liaieiaiq7rq4iq8gl.apps.googleusercontent.com',
+            'secret': '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',
+        }
+    }
 }

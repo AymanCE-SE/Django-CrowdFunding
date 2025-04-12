@@ -10,8 +10,28 @@ from .forms import ProfileUpdateForm, UserRegisterForm
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
+from django.contrib.auth.views import PasswordResetView
+from .utils import CustomPasswordResetTokenGenerator
+from django.contrib.auth.views import PasswordResetConfirmView
 
 User = get_user_model()
+
+
+class CustomPasswordResetView(PasswordResetView):
+    # token_generator = CustomPasswordResetTokenGenerator()
+    email_template_name = 'registration/password_reset_email.html'
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = '/password-reset/done/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print(context)  # Debugging: Print the context to the console
+        return context
+
+
+# class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+#     token_generator = CustomPasswordResetTokenGenerator()
+#     success_url = '/password-reset-complete/'
 
 
 @login_required
@@ -72,7 +92,7 @@ def register(request):
             # Profile is automatically created via signals
             messages.success(
                 request, 'Account created successfully! You can now log in.')
-            
+
             subject = 'Welcome to Crowdfunding'
             message = f'Hello {user.username},\n\nThank you for registering on our platform. We are excited to have you on board!\n\nBest regards,\nThe Crowdfunding Team'
             send_mail(
@@ -81,7 +101,7 @@ def register(request):
                 settings.EMAIL_HOST_USER,
                 [user.email],
                 fail_silently=False,
-            
+
             )
             return redirect('login')
     else:

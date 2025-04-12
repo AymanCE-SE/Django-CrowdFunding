@@ -6,8 +6,8 @@
       <div
         class="d-flex justify-content-between align-items-center mb-2">
         <div class="d-flex align-items-center">
-          <img
-            src="{% static 'images/profile.png' %}"
+            <img
+            src="{% if comment.user.profile.profile_picture %}{{ comment.user.profile.profile_picture.url }}{% else %}{% static 'images/profile.png' %}{% endif %}"
             class="rounded-circle me-2"
             width="32"
             height="32"
@@ -66,7 +66,7 @@
             class="d-flex justify-content-between align-items-center mb-1">
             <div class="d-flex align-items-center">
               <img
-                src="{% static 'images/profile.png' %}"
+                src="{% if reply.user.profile.profile_picture %}{{ reply.user.profile.profile_picture.url }}{% else %}{% static 'images/profile.png' %}{% endif %}"
                 class="rounded-circle me-2"
                 width="28"
                 height="28"

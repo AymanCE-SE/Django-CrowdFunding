@@ -117,7 +117,7 @@ class Profile(models.Model):
         related_name='profile'
     )
     
-    profile_picture = models.ImageField(  # Moved from CustomUser to Profile
+    profile_picture = models.ImageField( 
         upload_to='profile_pics/',
         null=True,
         blank=True

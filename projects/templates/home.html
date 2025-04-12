@@ -1,7 +1,7 @@
-<!-- @format -->
-
-{% extends 'base.html' %} {% load static %} {% block content %}
-<!-- Featured Projects Slider -->
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!-- Top Rated Projects Slider -->
 <section class="featured-slider mb-5">
   <div class="container">
     <div
@@ -14,13 +14,8 @@
           type="button"
           data-bs-target="#topProjectsCarousel"
           data-bs-slide-to="{{ forloop.counter0 }}"
-          {%
-          if
-          forloop.first
-          %}class="active"
-          {%
-          endif
-          %}></button>
+          {% if forloop.first %}class="active"
+          {% endif %}></button>
         {% endfor %}
       </div>
       <div class="carousel-inner rounded-4 shadow">
@@ -30,7 +25,7 @@
             class="slide-overlay"
             style="background-image: url('{{ project.get_first_image }}');">
             <div class="container">
-              <div class="slide-content">
+              <div class="slide-content p-5 text-white "> 
                 <span class="badge bg-primary mb-2">Top Rated</span>
                 <h2>{{ project.title }}</h2>
                 <p>{{ project.details|truncatewords:20 }}</p>
@@ -77,7 +72,7 @@
 </section>
 
 <!-- Platform Stats Section -->
-<section class="stats-section mb-5">
+<section class="stats-section my-5">
   <div class="container">
     <div class="stats-wrapper rounded-4 shadow-sm">
       <div class="stats-grid">
@@ -113,121 +108,265 @@
   </div>
 </section>
 
-<!-- Search Bar -->
-<section class="search-section mb-5">
+<!-- Top Donors Section -->
+<section class="top-donors-section mb-5">
   <div class="container">
-    <div class="search-wrapper rounded-4 shadow-sm">
-      <form
-        method="GET"
-        action="{% url 'projects:project_list' %}"
-        class="search-form"
-        id="searchForm">
-        <div class="input-group">
-          <input
-            type="text"
-            name="q"
-            class="form-control"
-            placeholder="Search projects by title or tag..."
-            value="{{ search_query }}"
-            aria-label="Search projects" />
-          <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-              <i class="fas fa-search me-2"></i> Find Projects
-            </button>
-            {% if search_query %}
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              onclick="clearSearch()">
-              <i class="fas fa-times"></i>
-            </button>
-            {% endif %}
+      <div class="section-header d-flex justify-content-between align-items-center mb-4">
+          <h3><i class="fas fa-trophy me-2"></i>Top Contributors</h3>
+          <div class="trophy-badges">
+              <i class="fas fa-medal text-warning"></i>
+              <i class="fas fa-medal text-secondary"></i>
+              <i class="fas fa-medal text-bronze"></i>
           </div>
+      </div>
+
+      <div class="donors-grid">
+          {% for donor in top_donors %}
+          <div class="donor-card {% if forloop.first %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">
+              <div class="rank-badge">
+                  {% if forloop.first %}
+                      <i class="fas fa-crown text-warning"></i>
+                  {% else %}
+                      #{{ forloop.counter }}
+                  {% endif %}
+              </div>
+              <div class="donor-avatar">
+                {% if donor.profile.profile_picture %}
+                    <img src="{{ donor.profile.profile_picture.url }}" 
+                         alt="{{ donor.username|default:'Anonymous' }}'s avatar">
+                {% else %}
+                    <img src="{% static 'images/profile.png' %}" 
+                         alt="{{ donor.username|default:'Anonymous' }}'s avatar">
+                {% endif %}
+            </div>
+              <div class="donor-info">
+                  <h5>{{ donor.username }}</h5>
+                  <p class="donation-amount">
+                      <i class="fas fa-hand-holding-usd text-success me-1"></i>
+                      {{ donor.total_donated|floatformat:0 }} EGP
+                  </p>
+                  <div class="donor-stats">
+                      <span>
+                          <i class="fas fa-project-diagram text-primary"></i>
+                          {{ donor.donation_set.count }} Projects
+                      </span>
+                      <span>
+                          <i class="fas fa-calendar-alt text-info"></i>
+                          Joined {{ donor.date_joined|date:"M Y" }}
+                      </span>
+                  </div>
+              </div>
+          </div>
+          {% empty %}
+          <div class="text-center text-muted py-4">
+              <i class="fas fa-users fa-3x mb-3"></i>
+              <p>No donors found yet. Be the first to contribute!</p>
+          </div>
+          {% endfor %}
+      </div>
+  </div>
+</section>
+
+
+<!-- Search and Categories Section -->
+<section class="search-filter-section mb-5">
+  <div class="container">
+    <div class="row">
+      <!-- Categories Sidebar -->
+      <aside class="col-lg-3 mb-4">
+        <div class="categories-wrapper rounded-4 shadow-sm p-3">
+          <h3 class="sidebar-title mb-3"><i class="fas fa-th-list me-2"></i>Categories</h3>
+          <ul class="categories-list list-unstyled">
+            <li>
+              <a 
+                href="#" 
+                class="category-filter d-flex justify-content-between align-items-center {% if not active_category %}active{% endif %}"
+                data-category="all">
+                <span>All Categories</span>
+                <span class="badge bg-primary rounded-pill">{{ total_projects }}</span>
+              </a>
+            </li>
+            {% for category in categories %}
+            <li>
+              <a 
+                href="#" 
+                class="category-filter d-flex justify-content-between align-items-center {% if category.id == active_category %}active{% endif %}"
+                data-category="{{ category.id }}">
+                <span>{{ category.name }}</span>
+                <span class="badge bg-primary rounded-pill">{{ category.projects_count }}</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
         </div>
-      </form>
+      </aside>
+
+      <!-- Right side with search and filtered projects -->
+      <div class="col-lg-9">
+        <!-- Search Bar -->
+        <div class="search-wrapper rounded-4 shadow-sm mb-4">
+          <form id="searchForm" class="search-form">
+            <input type="hidden" name="category" id="categoryInput" value="{{ active_category|default:'' }}">
+            <div class="input-group">
+              <input
+                type="text"
+                name="q"
+                class="form-control"
+                placeholder="Search projects..."
+                value="{{ search_query }}"
+                autocomplete="off" />
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search me-2"></i> Search
+                </button>
+                {% if search_query %}
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  id="clearBtn">
+                  <i class="fas fa-times"></i>
+                </button>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Category title and info -->
+        <div class="category-header mb-4">
+          <h2 id="categoryTitle">
+            {% if active_category %}
+              {{ active_category_name }}
+            {% else %}
+              All Projects
+            {% endif %}
+            {% if search_query %}
+              <small class="text-muted">matching "{{ search_query }}"</small>
+            {% endif %}
+          </h2>
+        </div>
+
+<!-- Projects container -->
+<div id="projectsContainer">
+  {% if projects %}
+      <div class="row g-4">
+          {% for project in projects %}
+          <div class="col-md-6 col-lg-4">
+              <div class="project-card" data-category="{{ project.category.id }}">
+                  <div class="card-img-container position-relative">
+                      <img src="{{ project.get_first_image }}" 
+                           alt="{{ project.title }}" 
+                           class="img-fluid rounded-top">
+                      <div class="category-badge">
+                          <i class="fas fa-folder me-1"></i>{{ project.category.name }}
+                      </div>
+                      <div class="progress position-absolute bottom-0 start-0 w-100" style="height: 5px;">
+                          <div class="progress-bar bg-success" 
+                               style="width: {{ project.progress }}%">
+                          </div>
+                      </div>
+                  </div>
+                  <div class="card-body">
+                      <h5 class="card-title">{{ project.title }}</h5>
+                      <p class="card-text">{{ project.details|truncatewords:15 }}</p>
+                      <div class="funding-meta d-flex justify-content-between align-items-center">
+                          <span class="badge bg-success">
+                              <i class="fas fa-chart-pie me-1"></i>{{ project.progress }}%
+                          </span>
+                          <span class="badge bg-secondary">
+                              <i class="fas fa-clock me-1"></i>{{ project.time_remaining }}
+                          </span>
+                      </div>
+                      <a href="{% url 'projects:project_detail' pk=project.pk %}" 
+                         class="btn btn-outline-primary w-100 mt-3">
+                          View Details
+                      </a>
+                  </div>
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+  {% else %}
+      <div class="alert alert-info text-center">
+          <i class="fas fa-info-circle me-2"></i>
+          {% if search_query %}
+              No projects found matching "{{ search_query }}"
+              {% if active_category %}
+                  in category "{{ active_category_name }}"
+              {% endif %}
+          {% else %}
+              No projects found in this category.
+          {% endif %}
+      </div>
+  {% endif %}
+</div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Categories Filter -->
-<section class="categories-section mb-5">
-  <div class="container">
-    <div
-      class="section-header d-flex justify-content-between align-items-center">
-      <h3><i class="fas fa-th-list me-2"></i>Categories</h3>
-      <a
-        href="{% url 'projects:project_list' %}"
-        class="btn btn-sm btn-outline-primary"
-        >View All Categories</a
-      >
-    </div>
-    <div class="categories-grid">
-      {% for category in categories %}
-      <a
-        href="{% url 'projects:project_list' %}?category={{ category.id }}"
-        class="category-card rounded-4 shadow-sm {% if category.id == active_category %}active{% endif %}">
-        <div class="category-icon">
-          <i class="fas fa-folder"></i>
+
+    <!-- Five latest projects -->
+<section class="projects-section mb-5">
+  <div class="section-header d-flex justify-content-between align-items-center mb-3">
+    <h3 class="text-primary fw-bold">
+      <i class="fas fa-clock me-2"></i>Latest Projects
+    </h3>
+    <a href="{% url 'projects:project_list' %}?sort=newest&limit=5" class="btn btn-sm btn-primary px-3 rounded-pill shadow-sm">
+      View 5 Latest
+    </a>
+  </div>
+
+  <div id="latestProjectsCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      {% for project in latest_projects|slice:":5" %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        <div class="row justify-content-center px-3">
+          <div class="col-md-6 col-lg-5">
+            <div class="project-card rounded-4 shadow-sm h-100 bg-white">
+              <div class="card-img-container position-relative">
+                <img
+                  src="{{ project.get_first_image }}"
+                  alt="{{ project.title }}"
+                  class="img-fluid rounded-top" />
+                <div class="progress position-absolute bottom-0 start-0 w-100" style="height: 5px;">
+                  <div class="progress-bar bg-success" style="width: {{ project.progress }}%"></div>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-dark fw-bold mb-2">{{ project.title }}</h5>
+                <p class="card-text text-muted small">{{ project.details|truncatewords:20 }}</p>
+                <div class="funding-meta d-flex justify-content-between mt-auto">
+                  <span class="badge bg-success rounded-pill">
+                    <i class="fas fa-chart-pie me-1"></i>{{ project.progress }}%
+                  </span>
+                  <span class="badge bg-secondary rounded-pill">
+                    <i class="fas fa-hourglass-half me-1"></i>{{ project.time_remaining }}
+                  </span>
+                </div>
+                <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-outline-primary w-100 mt-3 rounded-pill">
+                  <i class="fas fa-info-circle me-1"></i> View Details
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-        <h5>{{ category.name }}</h5>
-        <span class="badge rounded-pill bg-primary"
-          >{{ category.projects_count }} projects</span
-        >
-      </a>
+      </div>
       {% endfor %}
     </div>
+
+    <!-- Controls -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#latestProjectsCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon bg-primary rounded-circle p-2" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#latestProjectsCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon bg-primary rounded-circle p-2" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
   </div>
 </section>
 
-<!-- Main Content -->
-<section class="main-content">
-  <div class="container">
-    <!-- Latest Projects -->
-    <section class="projects-section mb-5">
-      <div
-        class="section-header d-flex justify-content-between align-items-center">
-        <h3><i class="fas fa-clock me-2"></i>Latest Projects</h3>
-        <a
-          href="{% url 'projects:project_list' %}?sort=newest"
-          class="btn btn-sm btn-outline-primary"
-          >View More</a
-        >
-      </div>
-      <div class="projects-grid">
-        {% for project in latest_projects %}
-        <div class="project-card rounded-4 shadow-sm">
-          <div class="card-img-container">
-            <img
-              src="{{ project.get_first_image }}"
-              alt="{{ project.title }}"
-              class="img-fluid rounded-top" />
-            <div class="progress">
-              <div
-                class="progress-bar bg-success"
-                style="width: {{ project.progress }}%"></div>
-            </div>
-          </div>
-          <div class="card-body">
-            <h5 class="card-title">{{ project.title }}</h5>
-            <p class="card-text">{{ project.details|truncatewords:15 }}</p>
-            <div class="funding-meta">
-              <span class="funded"
-                ><i class="fas fa-chart-pie me-1"></i>{{ project.progress }}%</span
-              >
-              <span class="time-left"
-                ><i class="fas fa-hourglass-half me-1"></i>{{ project.time_remaining }}</span
-              >
-            </div>
-            <a
-              href="{% url 'projects:project_detail' pk=project.pk %}"
-              class="btn btn-sm btn-outline-primary w-100 mt-3">
-              View Details
-            </a>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </section>
 
     <!-- Featured Projects -->
     <section class="projects-section mb-5">
@@ -279,34 +418,60 @@
   </div>
 </section>
 
-      <!-- Testimonials Section -->
-      {% comment %} <section class="testimonials-section">
-        <h2 class="section-title">What Our Donors Say</h2>
-        <div class="testimonial-grid">
+
+<!-- Testimonials Section -->
+<section class="testimonials-section mb-5">
+  <div class="container">
+      <div class="section-header d-flex justify-content-between align-items-center">
+          <h3><i class="fas fa-quote-left me-2"></i>What Our Community Says</h3>
+      </div>
+      
+      <div class="testimonials-grid">
           {% for testimonial in testimonials %}
           <div class="testimonial-card">
-            <div class="testimonial-content">
-              <p>"{{ testimonial.content }}"</p>
-            </div>
-            <div class="testimonial-footer">
-              <img src="{{ testimonial.user.avatar|default:'static/images/default-avatar.png' }}" class="testimonial-avatar" alt="{{ testimonial.user.username }}">
-              <div class="testimonial-info">
-                <h5 class="testimonial-name">{{ testimonial.user.username }}</h5>
-                <div class="testimonial-rating">
-                  {% for i in "12345"|make_list %}
-                  <i class="fas fa-star"></i>
-                  {% endfor %}
-                </div>
+              <div class="testimonial-header">
+                  <div class="testimonial-avatar">
+                      <img src="{% static testimonial.image %}" alt="{{ testimonial.name }}">
+                      <div class="avatar-badge">
+                          <i class="fas fa-quote-right"></i>
+                      </div>
+                  </div>
+                  <div class="testimonial-meta">
+                      <h5>{{ testimonial.name }}</h5>
+                      <span class="role">{{ testimonial.role }}</span>
+                      <div class="rating">
+                          {% for i in "12345"|make_list %}
+                          <i class="fas fa-star {% if forloop.counter <= testimonial.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                          {% endfor %}
+                      </div>
+                  </div>
               </div>
-            </div>
+              <div class="testimonial-body">
+                  <p>{{ testimonial.content }}</p>
+              </div>
+              <div class="testimonial-footer">
+                  <div class="contribution">
+                      <div class="stat">
+                          <i class="fas fa-hand-holding-usd text-success"></i>
+                          <span>{{ testimonial.donated }}</span>
+                          <small>donated</small>
+                      </div>
+                      <div class="stat">
+                          <i class="fas fa-project-diagram text-primary"></i>
+                          <span>{{ testimonial.projects }}</span>
+                          <small>projects</small>
+                      </div>
+                  </div>
+              </div>
           </div>
           {% endfor %}
-        </div>
-      </section> {% endcomment %}
+      </div>
+  </div>
+</section>
 
       <!-- Newsletter Section -->
        <hr>
-      <section class="newsletter-section">
+      <section class="newsletter-section container my-4">
         <div class="newsletter-content">
           <h2>Stay Updated</h2>
           <p>Subscribe to our newsletter for the latest projects and updates</p>
@@ -325,377 +490,11 @@
   </div>
 </div>
 
-{% endblock %} {% block extra_css %}
-<style>
-  /* General styles */
-  :root {
-    --primary: #3b82f6;
-    --primary-light: #dbeafe;
-    --secondary: #10b981;
-    --secondary-light: #d1fae5;
-    --warning: #f59e0b;
-    --warning-light: #fef3c7;
-    --dark: #1e293b;
-    --gray: #64748b;
-    --light: #f8fafc;
-    --border: #e2e8f0;
-  }
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/projects/home.css' %}">
 
-  /* Featured Slider */
-  .featured-slider {
-    margin-top: 2rem;
-  }
-
-  .slide-overlay {
-    height: 500px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-  }
-
-  .slide-overlay::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.4) 50%,
-      rgba(0, 0, 0, 0.1) 100%
-    );
-  }
-
-  .slide-content {
-    position: relative;
-    max-width: 500px;
-    padding: 3rem 1rem;
-    color: white;
-  }
-
-  .funding-info {
-    display: flex;
-    gap: 1.5rem;
-    font-weight: 500;
-  }
-
-  /* Stats Section */
-  .stats-section {
-    margin-top: -2rem;
-    position: relative;
-    z-index: 10;
-  }
-
-  .stats-wrapper {
-    background-color: white;
-    padding: 1.5rem;
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-  }
-
-  .stat-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem;
-  }
-
-  .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    font-size: 1.25rem;
-  }
-
-  .bg-primary-light {
-    background-color: var(--primary-light);
-    color: var(--primary);
-  }
-
-  .bg-success-light {
-    background-color: var(--secondary-light);
-    color: var(--secondary);
-  }
-
-  .bg-warning-light {
-    background-color: var(--warning-light);
-    color: var(--warning);
-  }
-
-  .stat-details h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0;
-    font-weight: 700;
-  }
-
-  .stat-details p {
-    margin-bottom: 0;
-    color: var(--gray);
-    font-size: 0.875rem;
-  }
-
-  /* Search Section */
-  .search-wrapper {
-    background-color: white;
-    padding: 1.5rem;
-  }
-
-  .search-form .form-control {
-    border-radius: 0.5rem 0 0 0.5rem;
-    padding: 0.75rem 1.25rem;
-    border: 1px solid var(--border);
-  }
-
-  .search-form .btn {
-    border-radius: 0 0.5rem 0.5rem 0;
-    padding: 0.75rem 1.5rem;
-  }
-
-  /* Categories Section */
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-
-  .category-card {
-    background: white;
-    padding: 1.5rem;
-    text-align: center;
-    text-decoration: none;
-    color: var(--dark);
-    transition: all 0.3s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .category-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    color: var(--primary);
-  }
-
-  .category-card.active {
-    border: 2px solid var(--primary);
-    color: var(--primary);
-  }
-
-  .category-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background-color: var(--primary-light);
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .category-card h5 {
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-  }
-
-  /* Section Headers */
-  .section-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border);
-  }
-
-  .section-header h3 {
-    font-weight: 700;
-    margin-bottom: 0;
-  }
-
-  /* Projects Grid */
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .project-card {
-    background: white;
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-
-  .project-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-img-container {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card-img-container img {
-    height: 180px;
-    width: 100%;
-    object-fit: cover;
-  }
-
-  .featured-badge {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    background: var(--warning);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .project-card .progress {
-    height: 5px;
-    border-radius: 0;
-  }
-
-  .card-body {
-    padding: 1.25rem;
-  }
-
-  .card-title {
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-text {
-    color: var(--gray);
-    font-size: 0.875rem;
-    height: 3rem;
-    overflow: hidden;
-  }
-
-  .funding-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  .funded {
-    color: var(--secondary);
-    font-weight: 600;
-  }
-
-  .time-left {
-    color: var(--gray);
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 992px) {
-    .slide-overlay {
-      height: 450px;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .slide-overlay {
-      height: 400px;
-    }
-
-    .projects-grid {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-
-    .categories-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 576px) {
-    .projects-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .categories-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .slide-content {
-      padding: 2rem 1rem;
-    }
-  }
-</style>
 {% endblock %}
 {% block extra_js %}
-<script>
-function clearSearch() {
-    const searchInput = document.querySelector('input[name="q"]');
-    searchInput.value = '';
-    document.getElementById('searchForm').submit();
-}
-
-// Add autocomplete for tags
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.querySelector('input[name="q"]');
-    let timeoutId;
-
-    searchInput.addEventListener('input', function() {
-        clearTimeout(timeoutId);
-        
-        timeoutId = setTimeout(() => {
-            const query = this.value;
-            if (query.length >= 2) {
-                fetch(`/api/tags/suggest/?q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Handle tag suggestions
-                        showSuggestions(data.tags);
-                    });
-            }
-        }, 300);
-    });
-});
-
-function showSuggestions(tags) {
-    let suggestionsDiv = document.getElementById('searchSuggestions');
-    if (!suggestionsDiv) {
-        suggestionsDiv = document.createElement('div');
-        suggestionsDiv.id = 'searchSuggestions';
-        suggestionsDiv.className = 'search-suggestions';
-        document.querySelector('.search-form').appendChild(suggestionsDiv);
-    }
-
-    if (tags.length > 0) {
-        const html = tags.map(tag => `
-            <div class="suggestion-item" onclick="selectTag('${tag}')">
-                <i class="fas fa-tag me-2"></i>${tag}
-            </div>
-        `).join('');
-        suggestionsDiv.innerHTML = html;
-        suggestionsDiv.style.display = 'block';
-    } else {
-        suggestionsDiv.style.display = 'none';
-    }
-}
-
-function selectTag(tag) {
-    document.querySelector('input[name="q"]').value = tag;
-    document.getElementById('searchForm').submit();
-}
-</script>
+<script src="{% static 'js/projects/home.js' %}"></script>
 {% endblock %}

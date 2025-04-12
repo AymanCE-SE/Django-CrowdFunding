@@ -1,0 +1,162 @@
+{% load static %}
+<!-- Project Status -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="card-title h4 mb-3">{{ project.title }}</h2>
+          <div class="progress mb-3">
+            <div
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: {{ project.progress }}%"
+              aria-valuenow="{{ project.progress }}"
+              aria-valuemin="0"
+              aria-valuemax="100"></div>
+          </div>
+
+          <div class="d-flex justify-content-between mb-4">
+            <div class="text-center">
+              <h6 class="mb-1">Raised</h6>
+              <h4 class="text-success mb-0">{{ total_donations }} EGP</h4>
+            </div>
+            <div class="text-center">
+              <h6 class="mb-1">Target</h6>
+              <h4 class="mb-0">{{ project.total_target }} EGP</h4>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span><i class="fas fa-clock me-2"></i>Time Remaining</span>
+              <strong>{{ project.time_remaining }}</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span><i class="fas fa-users me-2"></i>Backers</span>
+              <strong>{{ project.get_donation_stats.total_donors }}</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span><i class="fas fa-star me-2"></i>Rating</span>
+              <strong id="avg-rating"
+                >{{ average_rating|default:"No ratings" }}</strong
+              >
+            </div>
+          </div>
+
+          {% if user.is_authenticated %} {% with status=project.get_status %}
+          <div class="mb-4">
+            {% if status == 'coming_soon' %}
+            <div class="alert alert-info">
+              <i class="fas fa-clock me-2"></i>{{ project.get_status_message }}
+            </div>
+            <button class="btn btn-secondary btn-lg w-100" disabled>
+              <i class="fas fa-clock me-2"></i>Coming Soon
+            </button>
+            {% elif status == 'ended' %}
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-circle me-2"></i>{{ project.get_status_message }}
+            </div>
+            <button class="btn btn-secondary btn-lg w-100" disabled>
+              <i class="fas fa-times-circle me-2"></i>Project Ended
+            </button>
+            {% elif status == 'funded' %}
+            <div class="alert alert-success">
+              <i class="fas fa-check-circle me-2"></i>{{ project.get_status_message }}
+            </div>
+            <button class="btn btn-success btn-lg w-100" disabled>
+              <i class="fas fa-check-circle me-2"></i>Fully Funded
+            </button>
+            {% else %}
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Target:</strong> {{ project.total_target|floatformat:2 }}
+              EGP<br />
+              <strong>Still Needed:</strong> {{ project.get_status_message }}
+            </div>
+            <a
+              href="{% url 'projects:donate_to_project' pk=project.pk %}"
+              class="btn btn-success btn-lg w-100">
+              <i class="fas fa-hand-holding-usd me-2"></i>Donate Now
+            </a>
+            {% endif %}
+          </div>
+          {% endwith %} {% else %}
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>Please login to donate
+          </div>
+          <a
+            href="{% url 'login' %}?next={{ request.path }}"
+            class="btn btn-primary btn-lg w-100">
+            <i class="fas fa-sign-in-alt me-2"></i>Login to Donate
+          </a>
+          {% endif %}
+
+          <!-- Interactive Rating Widget -->
+          {% if user.is_authenticated and not is_owner %}
+          <div
+            id="rating-widget"
+            data-current-rating="{{ user_rating|default:0 }}"
+            data-project-id="{{ project.pk }}">
+            <div class="star-rating mb-2">
+              {% for star in "12345"|make_list %}
+              <i
+                class="rating-star {% if user_rating|default:0 >= forloop.counter %}fas{% else %}far{% endif %} fa-star"
+                data-score="{{ forloop.counter }}"></i>
+              {% endfor %}
+            </div>
+            <form
+              id="rating-form"
+              method="post"
+              action="{% url 'projects:rate_project' pk=project.pk %}">
+              {% csrf_token %}
+              <input
+                type="hidden"
+                name="score"
+                id="rating-score"
+                value="{{ user_rating|default:0 }}" />
+              <button type="submit" class="btn btn-primary btn-sm">
+                Submit Rating
+              </button>
+            </form>
+          </div>
+          {% elif user_rating %}
+          <div>
+            <span>Your rating: {{ user_rating }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Creator Info -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Project Creator</h5>
+          <div class="d-flex align-items-center mb-3">
+            <img
+              src="{% static 'images/profile.png' %}"
+              class="rounded-circle me-3"
+              width="50"
+              height="50"
+              alt="{{ project.created_by.username }}" />
+            <div>
+              <h6 class="mb-0">{{ project.created_by.username }}</h6>
+              <small class="text-muted"
+                >Member since {{ project.created_by.date_joined|date }}</small
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Donors -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Top Supporters</h5>
+          {% for donor in project.get_top_donors %}
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>{{ donor.user__username }}</span>
+            <strong>{{ donor.total_amount }} EGP</strong>
+          </div>
+          {% empty %}
+          <p class="text-muted">No donations yet.</p>
+          {% endfor %}
+        </div>
+      </div>

@@ -1,17 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Avg, Sum, F
+from django.db.models import Avg, Sum, F, Count
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db import transaction
+from django.http import JsonResponse
+from django.utils import timezone
+from django.conf import settings
+from users.models import CustomUser  
+
 from .forms import (
     ProjectForm, 
     ProjectImageFormSet,
     DonationForm, 
     CommentForm, 
     RatingForm,
-    ProjectImageForm
+    ProjectImageForm,
+    ReportForm
 )
 from .models import (
     Project, 
@@ -20,59 +26,97 @@ from .models import (
     Donation, 
     Rating,
     Category,
-    Tag
+    Tag,
+    Report,
 )
 import json
+from django.db import models  # Add this import
+from django.db.models import Avg
 
 
 ##########################################################################
 
+@login_required
+def rate_project(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    
+    if request.method == 'POST' and request.user != project.created_by:
+        score = request.POST.get('score')
+        try:
+            score = int(score)
+            if 1 <= score <= 5:
+                # Update or create rating
+                Rating.objects.update_or_create(
+                    user=request.user,
+                    project=project,
+                    defaults={'score': score}
+                )
+                
+                # Update project's average rating
+                project.update_average_rating()
+                
+                return JsonResponse({
+                    'success': True,
+                    'new_average': project.average_rating,
+                    'total_ratings': project.ratings.count()
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Rating must be between 1 and 5.'
+                })
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False, 
+                'error': 'Invalid rating score.'
+            })
+    
+    return JsonResponse({
+        'success': False, 
+        'error': 'Invalid request'
+    }, status=400)
 
 
 def project_detail(request, pk):
-    project = get_object_or_404(Project, pk=pk)
     user_rating = None
     
     if request.user.is_authenticated:
         try:
-            user_rating = Rating.objects.get(user=request.user, project=project).score
+            user_rating = Rating.objects.get(user=request.user, project__pk=pk).score
         except Rating.DoesNotExist:
             pass
 
-    try:
-        # Get project with related data
-        project = get_object_or_404(Project.objects.prefetch_related(
-            'images', 'comments', 'donations'
-        ).select_related('created_by'), pk=pk)
-        
-        # Get comments and ratings
-        comments = project.comments.select_related('user').order_by('-created_at')
-        ratings = project.ratings.all()
-        average_rating = ratings.aggregate(Avg('score'))['score__avg']
-        total_donations = project.donations.aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        # Get project owner status for template
-        is_owner = request.user.is_authenticated and project.created_by == request.user
-        
-        context = {
-            'project': project,
-            'comments': comments,
-            'average_rating': average_rating,
-            'total_donations': total_donations,
-            'comment_form': CommentForm() if request.user.is_authenticated else None,
-            'user_rating': user_rating,
-            'is_owner': request.user == project.created_by,
-        }
-        
-        # Add any messages to the context
-        if messages.get_messages(request):
-            context['messages'] = messages.get_messages(request)
-            
-        return render(request, 'projects/project_detail.html', context)
-        
-    except Exception as e:
-        messages.error(request, f"Error loading project: {str(e)}")
-        return redirect('projects:project_list')
+    # Get project with related data
+    project = get_object_or_404(Project.objects.prefetch_related(
+        'images', 'comments', 'donations'
+    ).select_related('created_by'), pk=pk)
+
+    # Get comments and ratings
+    comments = project.comments.filter(parent__isnull=True).select_related('user').order_by('-created_at')
+    # comments = project.comments.select_related('user').order_by('-created_at')
+    ratings = project.ratings.all()
+    average_rating = project.average_rating
+    ratings_count = ratings.count()
+    total_donations = project.donations.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    is_owner = request.user.is_authenticated and project.created_by == request.user
+
+    context = {
+        'project': project,
+        'comments': comments,
+        'average_rating': average_rating,
+        'ratings_count': ratings_count,
+        'total_donations': total_donations,
+        'comment_form': CommentForm() if request.user.is_authenticated else None,
+        'user_rating': user_rating,
+        'is_owner': is_owner,
+        'related_projects': project.get_related_projects(),
+    }
+
+    if messages.get_messages(request):
+        context['messages'] = messages.get_messages(request)
+
+    return render(request, 'projects/project_detail.html', context)
 
 
 ##############################################################################################################
@@ -192,37 +236,19 @@ def add_comment(request, pk):
             comment = form.save(commit=False)
             comment.user = request.user
             comment.project = project
+
+            parent_id = request.POST.get('parent')
+            if parent_id:
+                try:
+                    comment.parent = Comment.objects.get(id=parent_id)
+                except Comment.DoesNotExist:
+                    pass 
+
             comment.save()
 
             return redirect('projects:project_detail', pk=project.pk)
-    else:
-        form = CommentForm()
 
-    return render(request, 'projects/add_comment.html', {
-        'form': form,
-        'project': project,
-    })
 ######################################################################################################
-
-@login_required
-def rate_project(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    
-    if request.method == 'POST' and request.user != project.created_by:
-        score = request.POST.get('score')
-        if score and score.isdigit() and 1 <= int(score) <= 5:
-            rating, created = Rating.objects.update_or_create(
-                user=request.user,
-                project=project,
-                defaults={'score': int(score)}
-            )
-            messages.success(request, 'Thank you for rating this project!')
-        else:
-            messages.error(request, 'Invalid rating score.')
-    
-    return redirect('projects:project_detail', pk=pk)
-##############################################################################################################
-
 
 @login_required
 def edit_project(request, pk):
@@ -317,12 +343,166 @@ def delete_project(request, pk):
 
 
 def project_list(request):
-    projects = Project.objects.all().prefetch_related('images').order_by('-created_at')
+    projects = Project.objects.all()
+    
+    # Handle search
+    query = request.GET.get('q', '')
+    if query:
+        # Using Q objects for complex queries
+        projects = projects.filter(
+            models.Q(title__icontains=query) |
+            models.Q(tags__name__icontains=query)
+        ).distinct()
+
+    # Handle category filter
+    category_id = request.GET.get('category')
+    if category_id:
+        projects = projects.filter(category_id=category_id)
+
+    # Handle sorting
+    sort = request.GET.get('sort', '')
+    if sort == 'newest':
+        projects = projects.order_by('-created_at')
+    elif sort == 'most_funded':
+        projects = projects.order_by('-donated_amount')
+    elif sort == 'ending_soon':
+        projects = projects.order_by('end_time')
+
+    # Pagination
     paginator = Paginator(projects, 12)
     page = request.GET.get('page')
     projects = paginator.get_page(page)
-    
-    return render(request, 'projects/project_list.html', {
+
+    context = {
         'projects': projects,
         'categories': Category.objects.all(),
-    })
+        'search_query': query,
+        'active_category': category_id,
+        'active_sort': sort
+    }
+    return render(request, 'projects/project_list.html', context)
+    
+    
+# @login_required
+# def report_content(request):
+#     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#         form = ReportForm(request.POST)
+        
+#         if form.is_valid():
+#             content_type = request.POST.get('content_type')
+#             content_id = request.POST.get('content_id')
+            
+#             if content_type in ['project', 'comment', 'reply'] and content_id:
+#                 report = form.save(commit=False)
+#                 report.user = request.user
+#                 report.content_type = content_type
+#                 report.content_id = int(content_id)
+#                 report.save()
+                
+#                 return JsonResponse({
+#                     'success': True,
+#                     'message': 'Thank you for your report. Our team will review it shortly.'
+#                 })
+            
+#         return JsonResponse({
+#             'success': False,
+#             'message': 'Invalid report submission. Please try again.'
+#         })
+        
+#     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+
+
+@login_required
+def submit_report(request, project_id):
+    if request.method == 'POST':
+        report_type = request.POST.get('report_type')
+        object_id = request.POST.get('object_id') 
+        reason = request.POST.get('reason')
+
+        report = Report(reporter=request.user, reason=reason, report_type=report_type)
+
+        if report_type == 'project':
+            report.project = get_object_or_404(Project, id=project_id)
+        elif report_type == 'comment':
+            report.comment = get_object_or_404(Comment, id=object_id)
+
+        report.save()
+        return JsonResponse({'success': True, 'message': 'Report submitted.'})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
+
+from django.db.models import Avg, Count
+from django.utils import timezone
+
+def home(request):
+    now = timezone.now()
+    active_projects = Project.objects.filter(
+        start_time__lte=now,
+        end_time__gte=now
+    )
+
+    # Static testimonials data
+    testimonials = [
+        {
+            'name': 'John Doe',
+            'role': 'Regular Donor',
+            'content': 'I\'ve supported multiple projects through this platform. It\'s amazing to see the direct impact of my contributions!',
+            'image': 'static/images/testimonials/donor1.jpg',
+            'rating': 5
+        },
+        {
+            'name': 'Sarah Wilson',
+            'role': 'Project Creator',
+            'content': 'This platform made it easy to bring my project to life. The community here is incredibly supportive.',
+            'image': 'static/images/testimonials/creator1.jpg',
+            'rating': 5
+        },
+        {
+            'name': 'Michael Brown',
+            'role': 'Tech Enthusiast',
+            'content': 'The transparency and ease of use make this platform stand out. I love tracking the progress of projects I support.',
+            'image': 'static/images/testimonials/donor2.jpg',
+            'rating': 4
+        }
+    ]
+
+    # Get top donors
+    top_donors = CustomUser.objects.annotate(
+        total_donated=Sum('donation__amount')
+    ).filter(
+        total_donated__gt=0
+    ).order_by('-total_donated')[:5]
+
+    # Get overall statistics
+    total_projects = Project.objects.count()
+    total_donors = CustomUser.objects.filter(donation__isnull=False).distinct().count()
+    total_donated = Donation.objects.aggregate(total=Sum('amount'))['total'] or 0
+
+    context = {
+        'top_rated_projects': active_projects.annotate(
+            avg_rating=Avg('ratings__score')
+        ).filter(
+            avg_rating__isnull=False
+        ).order_by('-avg_rating')[:5],
+        
+        'latest_projects': active_projects.order_by(
+            '-created_at'
+        )[:5],
+        
+        'featured_projects': active_projects.filter(
+            is_featured=True
+        )[:5],
+        
+        'categories': Category.objects.annotate(
+            projects_count=Count('projects')
+        ).order_by('-projects_count'),
+        
+        'top_donors': top_donors,
+        'total_projects': total_projects,
+        'total_donors': total_donors,
+        'total_donated': total_donated,
+        'testimonials': testimonials,  
+        'active_category': request.GET.get('category')
+    }
+    return render(request, 'home.html', context)

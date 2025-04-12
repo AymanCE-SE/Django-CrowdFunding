@@ -1,0 +1,54 @@
+
+<!-- Report Modal -->
+<div
+  class="modal fade"
+  id="reportModal"
+  tabindex="-1"
+  aria-labelledby="reportModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="reportForm" method="POST" action="{% url 'projects:submit_report' project_id=project.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="reportModalLabel">Report Content</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Hidden fields for report type and object ID -->
+          <input type="hidden" name="report_type" id="reportType" />
+          <input type="hidden" name="object_id" id="reportObjectId" />
+
+          <div class="mb-3">
+            <label for="reportReason" class="form-label">Reason</label>
+            <select
+              name="reason"
+              id="reportReason"
+              class="form-select"
+              required>
+              <option value="" disabled selected>Select reason</option>
+              <option value="spam">Spam</option>
+              <option value="inappropriate">Inappropriate Content</option>
+              <option value="harassment">Harassment</option>
+              <option value="fraud">Fraud</option>
+              <option value="copyright">Copyright Violation</option>
+              <option value="offensive">Offensive Content</option>
+              <option value="hate_speech">Hate Speech</option>
+              <option value="false_information">False Information</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">
+            Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

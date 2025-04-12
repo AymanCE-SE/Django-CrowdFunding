@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
+from django.db.models import Avg
 
 
 class Category(models.Model):
@@ -28,13 +29,20 @@ class Tag(models.Model):
 
 
 class Project(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('running', 'Running'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
+    ]
+
     title = models.CharField(max_length=200)
     details = models.TextField()
     total_target = models.DecimalField(max_digits=10, decimal_places=2)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='created_projects'  # Add this for easier access to user's projects
+        related_name='created_projects'  
     )
     category = models.ForeignKey(
         'Category', 
@@ -45,9 +53,20 @@ class Project(models.Model):
     )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    tags = models.ManyToManyField(Tag)
+    average_rating = models.FloatField(default=0, blank=True)
+    tags = models.ManyToManyField(
+        'Tag', 
+        related_name='projects',
+        blank=True  # Make tags optional
+    )
     donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_featured = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
 
     class Meta:
         ordering = ['-created_at']
@@ -194,6 +213,27 @@ class Project(models.Model):
         """Check if user is the project owner"""
         return self.created_by == user
 
+    def calculate_average_rating(self):
+        """Calculate and return the average rating"""
+        avg = self.ratings.aggregate(Avg('score'))['score__avg'] or 0
+        return round(avg, 2)
+
+    def update_average_rating(self):
+        """Update the stored average rating"""
+        self.average_rating = self.calculate_average_rating()
+        self.save(update_fields=['average_rating'])
+
+    def get_related_projects(self):
+        """Get related projects based on category and tags"""
+        return Project.objects.filter(
+            models.Q(category=self.category) | 
+            models.Q(tags__in=self.tags.all())
+        ).exclude(
+            id=self.id
+        ).distinct().order_by(
+            '-created_at'
+        )[:5]
+
 
 class ProjectImage(models.Model):
     project = models.ForeignKey(
@@ -222,9 +262,13 @@ class Comment(models.Model):
     project = models.ForeignKey(Project, related_name='comments', on_delete=models.CASCADE)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
 
     def __str__(self):
+        if self.parent:
+            return f"Reply by {self.user} to {self.parent.user} on {self.project}"
         return f"Comment by {self.user} on {self.project}"
+
 ##########################################################################################################
 
 class Rating(models.Model):
@@ -235,3 +279,32 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"Rating by {self.user} on {self.project}"
+
+
+class Report(models.Model):
+    REPORT_TYPE_CHOICES = [
+        ('project', 'Project'),
+        ('comment', 'Comment'),
+    ]
+
+    REASON_CHOICES = [
+        ('spam', 'Spam'),
+        ('inappropriate', 'Inappropriate Content'),
+        ('harassment', 'Harassment'),
+        ('fraud', 'Fraud'),
+        ('copyright', 'Copyright Violation'),
+        ('offensive', 'Offensive Content'),
+        ('hate_speech', 'Hate Speech'),
+        ('false_information', 'False Information'),
+        ('other', 'Other'),
+    ]
+
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    report_type = models.CharField(max_length=10, choices=REPORT_TYPE_CHOICES)
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, null=True, blank=True, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.report_type} report by {self.reporter}"

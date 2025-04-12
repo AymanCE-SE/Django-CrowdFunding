@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 from .forms import CustomPasswordResetForm
 
-app_name = 'users'
+app_name = "users"
 
 urlpatterns = [
     path('register/', views.register, name='register'),

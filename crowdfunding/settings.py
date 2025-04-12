@@ -93,7 +93,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "crowdfunding_db",
-        "USER": "postgres",
+        "USER": "crowdfunding",
         "PASSWORD": "123456",
         "HOST": "localhost",
         "PORT": "5432",

@@ -1,7 +1,5 @@
 <!-- @format -->
-{% extends 'base.html' %} {% load socialaccount %} {% load static %} {% load
-widget_tweaks %} {% block title %}Login - Crowd Funding{% endblock %} {% block
-extra_css %}
+{% extends 'base.html' %} {% load socialaccount %} {% load static %} {% load widget_tweaks %} {% block title %}Login - Crowd Funding{% endblock %} {% block extra_css %}
 <link href="{% static 'css/login.css' %}" rel="stylesheet" />
 {% endblock %} {% block content %}
 <div class="container mt-5">
@@ -38,8 +36,7 @@ extra_css %}
               <label for="{{ form.username.id_for_label }}" class="form-label">
                 <i class="fas fa-user me-2"></i>Username
               </label>
-              {{ form.username|add_class:"form-control" }} {% if
-              form.username.errors %}
+              {{ form.username|add_class:"form-control" }} {% if  form.username.errors %}
               <div class="invalid-feedback">
                 {{ form.username.errors|striptags }}
               </div>
@@ -51,8 +48,7 @@ extra_css %}
               <label for="{{ form.password.id_for_label }}" class="form-label">
                 <i class="fas fa-lock me-2"></i>Password
               </label>
-              {{ form.password|add_class:"form-control" }} {% if
-              form.password.errors %}
+              {{ form.password|add_class:"form-control" }} {% if form.password.errors %}
               <div class="invalid-feedback">
                 {{ form.password.errors|striptags }}
               </div>

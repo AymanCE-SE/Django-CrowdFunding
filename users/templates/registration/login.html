@@ -1,7 +1,7 @@
 <!-- @format -->
-
-{% extends 'base.html' %} {% load static %} {% load widget_tweaks %}
- {% block title %}Login - Crowd Funding{% endblock %} {% block extra_css %}
+{% extends 'base.html' %} {% load socialaccount %} {% load static %} {% load
+widget_tweaks %} {% block title %}Login - Crowd Funding{% endblock %} {% block
+extra_css %}
 <link href="{% static 'css/login.css' %}" rel="stylesheet" />
 {% endblock %} {% block content %}
 <div class="container mt-5">
@@ -11,7 +11,10 @@
         <!-- Card Header -->
         <div class="card-header login-header text-center py-4">
           <div class="mb-2">
-            <i class="fas fa-user-circle login-icon" style="font-size: 4rem;"></i>
+            <i
+              class="fas fa-user-circle login-icon"
+              style="font-size: 4rem"
+            ></i>
           </div>
           <h3 class="mb-0 text-light">Welcome Back</h3>
           <p class="text-muted-50 mb-0">Please login to your account</p>
@@ -35,8 +38,8 @@
               <label for="{{ form.username.id_for_label }}" class="form-label">
                 <i class="fas fa-user me-2"></i>Username
               </label>
-              {{ form.username|add_class:"form-control" }}
-              {% if form.username.errors %}
+              {{ form.username|add_class:"form-control" }} {% if
+              form.username.errors %}
               <div class="invalid-feedback">
                 {{ form.username.errors|striptags }}
               </div>
@@ -48,8 +51,8 @@
               <label for="{{ form.password.id_for_label }}" class="form-label">
                 <i class="fas fa-lock me-2"></i>Password
               </label>
-              {{ form.password|add_class:"form-control" }}
-              {% if form.password.errors %}
+              {{ form.password|add_class:"form-control" }} {% if
+              form.password.errors %}
               <div class="invalid-feedback">
                 {{ form.password.errors|striptags }}
               </div>
@@ -63,14 +66,16 @@
                   type="checkbox"
                   class="form-check-input"
                   id="remember"
-                  name="remember" />
+                  name="remember"
+                />
                 <label class="form-check-label" for="remember"
                   >Remember me</label
                 >
               </div>
               <a
                 href="{% url 'users:password_reset' %}"
-                class="text-decoration-none text-muted">
+                class="text-decoration-none text-muted"
+              >
                 <i class="fas fa-key me-1"></i>Forgot Password?
               </a>
             </div>
@@ -78,10 +83,26 @@
             <!-- Submit Button -->
             <button
               type="submit"
-              class="btn login-btn w-100 btn-lg mb-3 animate__animated animate__pulse">
+              class="btn login-btn w-100 btn-lg mb-3 animate__animated animate__pulse"
+            >
               <i class="fas fa-sign-in-alt me-2"></i>Login
             </button>
           </form>
+
+          Social Login
+          <div class="text-center mt-4">
+            <a
+              href="{% provider_login_url 'facebook' %}"
+              class="btn btn-primary"
+            >
+              <i class="fab fa-facebook me-2"></i> Sign in with Facebook
+            </a>
+          </div>
+          <div class="text-center mt-4">
+            <a href="{% provider_login_url 'google' %}" class="btn btn-danger">
+              <i class="fab fa-google me-2"></i> Sign in with GOOGLE
+            </a>
+          </div>
         </div>
 
         <!-- Card Footer -->
@@ -90,7 +111,8 @@
             Don't have an account?
             <a
               href="{% url 'users:register' %}"
-              class="text-muted fw-bold text-decoration-none">
+              class="text-muted fw-bold text-decoration-none"
+            >
               <i class="fas fa-user-plus me-1"></i>Register here
             </a>
           </p>

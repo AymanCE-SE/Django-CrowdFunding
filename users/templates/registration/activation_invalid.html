@@ -1,0 +1,15 @@
+{% extends "base_generic.html" %} {% block content %}
+<div class="alert alert-danger" role="alert">
+  <h4 class="alert-heading">Activation link is invalid or expired!</h4>
+  <p>
+    It seems that the activation link you clicked is either invalid or has
+    expired. If you still need assistance, please contact support or request a
+    new activation email.
+  </p>
+  <hr />
+  <p class="mb-0">
+    If you believe this was a mistake, please
+    <a href="{% url 'register' %}">register again</a>.
+  </p>
+</div>
+{% endblock %}

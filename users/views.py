@@ -12,10 +12,21 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
-
 from django.contrib.auth.views import PasswordResetView
 from .utils import CustomPasswordResetTokenGenerator
 from django.contrib.auth.views import PasswordResetConfirmView
+from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect
+
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html' 
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            messages.info(request, 'You are already logged in.')
+            return redirect('users:profile')
+        return super().dispatch(request, *args, **kwargs)
+
 
 User = get_user_model()
 
@@ -84,6 +95,7 @@ def delete_account(request):
 
 
 def register(request):
+    
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
@@ -104,14 +116,17 @@ def register(request):
                 "registration/account_activation_email.html",
                 {
                     "user": user,
-                    "activation_link": activation_link,  # Pass the URL directly
+                    "activation_link": activation_link, 
                 },
             )
 
             user.email_user(subject, message)
 
-            messages.success(
-                request, 'Account created successfully! You can now log in.'
+            # messages.success(
+            #     request, 'Account created successfully! You can now log in.'
+            # )
+            messages.info(
+                request, "Please check your email to activate your account."
             )
             return redirect("login")
     else:

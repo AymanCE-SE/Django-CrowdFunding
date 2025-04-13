@@ -45,8 +45,8 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',  # Add Google provider
-    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',  
+    'allauth.socialaccount.providers.google',   # Add Google provider
 ]
 
 MIDDLEWARE = [
@@ -149,7 +149,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Login/Logout Settings
 LOGIN_REDIRECT_URL = "users:profile"
 LOGIN_URL = "login"
-LOGOUT_REDIRECT_URL = "/"  # Redirect to home page after logout
+LOGOUT_REDIRECT_URL = "/" 
 
 # Custom user model
 AUTH_USER_MODEL = "users.CustomUser"

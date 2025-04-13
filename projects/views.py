@@ -9,17 +9,14 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.conf import settings
 from users.models import CustomUser  
-# from django.db.models import Avg, Count
-# from django.utils import timezone
+
 
 from .forms import (
     ProjectForm, 
     ProjectImageFormSet,
     DonationForm, 
     CommentForm, 
-    RatingForm,
-    ProjectImageForm,
-    ReportForm
+
 )
 from .models import (
     Project, 
@@ -244,7 +241,7 @@ def add_comment(request, pk):
 
             return redirect('projects:project_detail', pk=project.pk)
 
-######################################################################################################
+
 
 @login_required
 def edit_project(request, pk):
@@ -385,6 +382,7 @@ def project_list(request):
     
 @login_required
 def submit_report(request, project_id):
+
     if request.method == 'POST':
         report_type = request.POST.get('report_type')
         object_id = request.POST.get('object_id') 

@@ -55,7 +55,19 @@
         </div>
         <div class="card-body">
           <h5 class="card-title">{{ project.title }}</h5>
-          <p class="card-text">{{ project.details }}</p>
+          <p class="card-text">{{ project.details|truncatewords:15 }}</p>
+
+          <!-- Star Rating -->
+          <div class="rating mb-2">
+            {% for i in "12345"|make_list %}
+            <i
+              class="fas fa-star {% if i <= project.average_rating|floatformat:0 %}text-warning{% else %}text-muted{% endif %}"></i>
+            {% endfor %}
+            <small class="text-muted"
+              >({{ project.average_rating|floatformat:1 }})</small
+            >
+          </div>
+
           <div class="progress mb-2">
             <div
               class="progress-bar bg-success"
@@ -63,6 +75,7 @@
           </div>
           <div class="d-flex justify-content-between">
             <small class="text-muted">{{ project.progress }}% funded</small>
+
             <a
               href="{% url 'projects:project_detail' pk=project.pk %}"
               class="btn btn-sm btn-primary">

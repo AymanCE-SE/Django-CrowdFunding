@@ -373,11 +373,11 @@
       <div
         class="section-header d-flex justify-content-between align-items-center">
         <h3><i class="fas fa-star me-2"></i>Featured Projects</h3>
-        <a
+        {% comment %} <a
           href="{% url 'projects:project_list' %}?featured=true"
           class="btn btn-sm btn-outline-primary"
           >View More</a
-        >
+        > {% endcomment %}
       </div>
       <div class="projects-grid">
         {% for project in featured_projects %}

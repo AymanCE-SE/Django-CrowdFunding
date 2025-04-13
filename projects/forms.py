@@ -65,10 +65,6 @@ class ProjectImageForm(forms.ModelForm):
             'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
 
-# Use inlineformset_factory to tie ProjectImages to a specific Project
-# - extra=1 ensures one blank form is rendered (so there’s always at least one)
-# - max_num=5 and validate_max=True restrict the total images to five
-# - can_delete=True allows removing an image if needed
 ProjectImageFormSet = inlineformset_factory(
     Project, 
     ProjectImage, 

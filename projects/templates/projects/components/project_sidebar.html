@@ -130,19 +130,23 @@
         <div class="card-body">
           <h5 class="card-title">Project Creator</h5>
           <div class="d-flex align-items-center mb-3">
-            <img
-              src="{% static 'images/profile.png' %}"
-              class="rounded-circle me-3"
-              width="50"
-              height="50"
-              alt="{{ project.created_by.username }}" />
+            <img 
+                src="{% if project.created_by.profile.profile_picture %}
+                        {{ project.created_by.profile.profile_picture.url }}
+                     {% else %}
+                        {% static 'images/profile.png' %}
+                     {% endif %}"
+                class="rounded-circle me-3"
+                width="50"
+                height="50"
+                alt="{{ project.created_by.username }}" />
             <div>
-              <h6 class="mb-0">{{ project.created_by.username }}</h6>
-              <small class="text-muted"
-                >Member since {{ project.created_by.date_joined|date }}</small
-              >
+                <h6 class="mb-0">{{ project.created_by.username }}</h6>
+                <small class="text-muted">
+                    Member since {{ project.created_by.date_joined|date }}
+                </small>
             </div>
-          </div>
+        </div>
         </div>
       </div>
 

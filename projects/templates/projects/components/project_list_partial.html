@@ -1,0 +1,19 @@
+<!-- @format -->
+
+{% if projects %}
+<div class="row g-4">
+  {% for project in projects %}
+  <div class="col-md-6 col-lg-4">
+    <div class="project-card" data-category="{{ project.category.id }}">
+      <!-- Project card content -->
+      {% include 'projects/components/project_card.html' with project=project %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+  <i class="fas fa-info-circle me-2"></i>
+  {% if search_query %} No projects found matching "{{ search_query }}" {% if active_category %} in category "{{ active_category_name }}" {% endif %} {% else %} No projects found in this category. {% endif %}
+</div>
+{% endif %}

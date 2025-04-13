@@ -9,6 +9,8 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.conf import settings
 from users.models import CustomUser  
+# from django.db.models import Avg, Count
+# from django.utils import timezone
 
 from .forms import (
     ProjectForm, 
@@ -30,11 +32,10 @@ from .models import (
     Report,
 )
 import json
-from django.db import models  # Add this import
+from django.db import models 
 from django.db.models import Avg
 
 
-##########################################################################
 
 @login_required
 def rate_project(request, pk):
@@ -93,7 +94,6 @@ def project_detail(request, pk):
 
     # Get comments and ratings
     comments = project.comments.filter(parent__isnull=True).select_related('user').order_by('-created_at')
-    # comments = project.comments.select_related('user').order_by('-created_at')
     ratings = project.ratings.all()
     average_rating = project.average_rating
     ratings_count = ratings.count()
@@ -119,7 +119,6 @@ def project_detail(request, pk):
     return render(request, 'projects/project_detail.html', context)
 
 
-##############################################################################################################
 @login_required
 def create_project(request):
     if request.method == 'POST':
@@ -182,7 +181,6 @@ def create_project(request):
     return render(request, 'projects/create_project.html', context)
 
 
-############################################################################################
 
 @login_required
 def donate_to_project(request, pk):
@@ -222,8 +220,6 @@ def donate_to_project(request, pk):
         'project': project
     })
 
-
-#############################################################################################
 
 @login_required
 def add_comment(request, pk):
@@ -373,6 +369,11 @@ def project_list(request):
     page = request.GET.get('page')
     projects = paginator.get_page(page)
 
+    # latest projects
+    limit = request.GET.get('limit')
+    if limit:
+        projects = projects[:int(limit)]
+    
     context = {
         'projects': projects,
         'categories': Category.objects.all(),
@@ -382,36 +383,6 @@ def project_list(request):
     }
     return render(request, 'projects/project_list.html', context)
     
-    
-# @login_required
-# def report_content(request):
-#     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-#         form = ReportForm(request.POST)
-        
-#         if form.is_valid():
-#             content_type = request.POST.get('content_type')
-#             content_id = request.POST.get('content_id')
-            
-#             if content_type in ['project', 'comment', 'reply'] and content_id:
-#                 report = form.save(commit=False)
-#                 report.user = request.user
-#                 report.content_type = content_type
-#                 report.content_id = int(content_id)
-#                 report.save()
-                
-#                 return JsonResponse({
-#                     'success': True,
-#                     'message': 'Thank you for your report. Our team will review it shortly.'
-#                 })
-            
-#         return JsonResponse({
-#             'success': False,
-#             'message': 'Invalid report submission. Please try again.'
-#         })
-        
-#     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
-
-
 @login_required
 def submit_report(request, project_id):
     if request.method == 'POST':
@@ -432,8 +403,6 @@ def submit_report(request, project_id):
     return JsonResponse({'success': False, 'message': 'Invalid request.'})
 
 
-from django.db.models import Avg, Count
-from django.utils import timezone
 
 def home(request):
     now = timezone.now()
@@ -445,34 +414,68 @@ def home(request):
     # Static testimonials data
     testimonials = [
         {
-            'name': 'John Doe',
+            'name': 'Mohamed Abd El-Hay',
             'role': 'Regular Donor',
             'content': 'I\'ve supported multiple projects through this platform. It\'s amazing to see the direct impact of my contributions!',
-            'image': 'static/images/testimonials/donor1.jpg',
-            'rating': 5
+            'image': 'images/testimonials/donor1.jpg',
+            'rating': 5,
+            'donated': '55,000 EGP',
+            'projects': 12
         },
         {
             'name': 'Sarah Wilson',
             'role': 'Project Creator',
             'content': 'This platform made it easy to bring my project to life. The community here is incredibly supportive.',
-            'image': 'static/images/testimonials/creator1.jpg',
-            'rating': 5
+            'image': 'images/testimonials/creator1.jpg',
+            'rating': 5,
+            'donated': '15,000 EGP',
+            'projects': 8
         },
         {
-            'name': 'Michael Brown',
+            'name': 'Hazem Khaled',
             'role': 'Tech Enthusiast',
             'content': 'The transparency and ease of use make this platform stand out. I love tracking the progress of projects I support.',
-            'image': 'static/images/testimonials/donor2.jpg',
-            'rating': 4
+            'image': 'images/testimonials/donor2.jpg',
+            'rating': 4,
+            'donated': '30,000 EGP',
+            'projects': 15
         }
     ]
 
     # Get top donors
     top_donors = CustomUser.objects.annotate(
-        total_donated=Sum('donation__amount')
+        total_donated=Sum('donation__amount'),
+        projects_supported=Count('donation__project', distinct=True)
     ).filter(
         total_donated__gt=0
-    ).order_by('-total_donated')[:5]
+    ).order_by('-total_donated')[:3]
+
+
+    # Handle search
+    search_query = request.GET.get('q', '')
+    category_id = request.GET.get('category')
+
+    # Filter projects based on search and category
+    filtered_projects = active_projects
+    if search_query:
+        filtered_projects = filtered_projects.filter(
+            models.Q(title__icontains=search_query) |
+            models.Q(tags__name__icontains=search_query)
+        ).distinct()
+        
+    # Update category filtering logic
+    if category_id and category_id != 'all':
+        try:
+            category_id = int(category_id)
+            filtered_projects = filtered_projects.filter(category_id=category_id)
+            active_category_name = Category.objects.get(id=category_id).name
+        except (ValueError, Category.DoesNotExist):
+            category_id = None
+            active_category_name = None
+    else:
+        category_id = None
+        active_category_name = None
+
 
     # Get overall statistics
     total_projects = Project.objects.count()
@@ -498,11 +501,21 @@ def home(request):
             projects_count=Count('projects')
         ).order_by('-projects_count'),
         
+        'projects': filtered_projects,  # Add filtered projects to context
+        'search_query': search_query,
+        'active_category': category_id,
+        'active_category_name': active_category_name,
         'top_donors': top_donors,
         'total_projects': total_projects,
         'total_donors': total_donors,
         'total_donated': total_donated,
-        'testimonials': testimonials,  
-        'active_category': request.GET.get('category')
+        'testimonials': testimonials
     }
-    return render(request, 'home.html', context)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Return partial template for AJAX requests
+        template = 'projects/components/project_list_partial.html'
+    else:
+        template = 'home.html'
+
+    return render(request, template, context)

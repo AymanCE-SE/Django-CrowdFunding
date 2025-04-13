@@ -1,0 +1,622 @@
+  
+  /* General styles */
+  :root {
+    --primary: #3b82f6;
+    --primary-light: #dbeafe;
+    --secondary: #10b981;
+    --secondary-light: #d1fae5;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --dark: #1e293b;
+    --gray: #64748b;
+    --light: #f8fafc;
+    --border: #e2e8f0;
+  }
+  
+  /* Featured Slider */
+  .featured-slider {
+    margin-top: 2rem;
+  }
+  
+  .slide-overlay {
+    height: 500px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  
+  .slide-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
+  }
+  
+  .slide-content {
+    position: relative;
+    max-width: 500px;
+    padding: 3rem 1rem;
+    color: white;
+    top:140px;
+    left: 60px;
+  }
+  
+  .funding-info {
+    display: flex;
+    gap: 1.5rem;
+    font-weight: 500;
+  }
+  
+  /* Stats Section */
+  .stats-section {
+    margin-top: -2rem;
+    position: relative;
+    z-index: 10;
+  }
+  
+  .stats-wrapper {
+    background-color: white;
+    padding: 1.5rem;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.25rem;
+  }
+  
+  .bg-primary-light {
+    background-color: var(--primary-light);
+    color: var(--primary);
+  }
+  
+  .bg-success-light {
+    background-color: var(--secondary-light);
+    color: var(--secondary);
+  }
+  
+  .bg-warning-light {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+  
+  .stat-details h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+    font-weight: 700;
+  }
+  
+  .stat-details p {
+    margin-bottom: 0;
+    color: var(--gray);
+    font-size: 0.875rem;
+  }
+  
+  /* Search Section */
+  .search-wrapper {
+    background-color: white;
+    padding: 1.5rem;
+  }
+  
+  .search-form .form-control {
+    border-radius: 0.5rem 0 0 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid var(--border);
+  }
+  
+  .search-form .btn {
+    border-radius: 0 0.5rem 0.5rem 0;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  /* Section Headers */
+  .section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border);
+  }
+  
+  .section-header h3 {
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+  
+  /* Projects Grid */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .project-card {
+    background: white;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-img-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-img-container img {
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+  }
+  
+  .featured-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--warning);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .project-card .progress {
+    height: 5px;
+    border-radius: 0;
+  }
+  
+  .card-body {
+    padding: 1.25rem;
+  }
+  
+  .card-title {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .card-text {
+    color: var(--gray);
+    font-size: 0.875rem;
+    height: 3rem;
+    overflow: hidden;
+  }
+  
+  .funding-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .funded {
+    color: var(--secondary);
+    font-weight: 600;
+  }
+  
+  .time-left {
+    color: var(--gray);
+  }
+  
+  /* Categories Sidebar Styling */
+  .categories-wrapper {
+    background-color: #fff;
+    border-left: 4px solid #f1ebeb;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar-title {
+    color: #333;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .categories-list li {
+    margin-bottom: 6px;
+  }
+  
+  .categories-list a {
+    padding: 10px 15px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+  }
+  
+  .categories-list a:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    color: #0d6efd;
+  }
+  
+  .categories-list a.active {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    font-weight: 600;
+  }
+  
+  .badge {
+    transition: all 0.2s ease;
+  }
+  
+  .categories-list a:hover .badge,
+  .categories-list a.active .badge {
+    background-color: #0d6efd;
+    transform: scale(1.05);
+  }
+  
+  /* Project Card Enhancements */
+  .related-project-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  
+  .related-project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .related-project-img {
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .related-project-card:hover .related-project-img {
+    transform: scale(1.05);
+  }
+  
+  .category-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .project-progress {
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    transition: opacity 0.3s ease;
+  }
+  
+  .related-project-card:hover .project-progress {
+    opacity: 0.95;
+  }
+  
+  /* Testimonials styles */
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .testimonial-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .testimonial-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .testimonial-avatar {
+    position: relative;
+    margin-right: 1rem;
+  }
+  
+  .testimonial-avatar img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary);
+    padding: 2px;
+  }
+  
+  .avatar-badge {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+  }
+  
+  .testimonial-meta h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .testimonial-meta .role {
+    color: var(--primary);
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  
+  .testimonial-body {
+    position: relative;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+  
+  .testimonial-body p {
+    margin: 0;
+    color: var(--gray);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  .testimonial-footer .contribution {
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .testimonial-footer .stat {
+    text-align: center;
+  }
+  
+  .testimonial-footer .stat i {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .testimonial-footer .stat span {
+    display: block;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
+  .testimonial-footer .stat small {
+    color: var(--gray);
+    font-size: 0.75rem;
+  }
+  
+  /* Top Donors Section Styles */
+  .top-donors-section {
+    padding: 2rem 0;
+    background: linear-gradient(to bottom, var(--bs-light), white);
+  }
+  
+  .trophy-badges {
+    font-size: 1.5rem;
+  }
+  
+  .trophy-badges .fa-medal {
+    margin-left: 0.5rem;
+  }
+  
+  .text-bronze {
+    color: #cd7f32;
+  }
+  
+  .donors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .donor-card {
+    position: relative;
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .donor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+  }
+  
+  .donor-card.gold {
+    background: linear-gradient(135deg, #fff6e6, #fff);
+    border: 2px solid #ffd700;
+  }
+  
+  .donor-card.silver {
+    background: linear-gradient(135deg, #f8f9fa, #fff);
+    border: 2px solid #c0c0c0;
+  }
+  
+  .donor-card.bronze {
+    background: linear-gradient(135deg, #fff4f0, #fff);
+    border: 2px solid #cd7f32;
+  }
+  
+  .rank-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+  
+  .donor-avatar {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1rem;
+    position: relative;
+  }
+  
+  .donor-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .donor-info h5 {
+    margin-bottom: 0.5rem;
+    color: var(--bs-dark);
+  }
+  
+  .donation-amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--bs-success);
+    margin-bottom: 1rem;
+  }
+  
+  .donor-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--bs-gray);
+  }
+  
+  .donor-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  /* Gold card shine effect */
+  .donor-card.gold::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(255,255,255,0.6),
+        transparent
+    );
+    animation: shine 3s infinite;
+  }
+  
+  @keyframes shine {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+  }
+  
+  /* Animation for filtered cards */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .filtered-in {
+    animation: fadeIn 0.4s ease forwards;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .slide-overlay {
+      height: 450px;
+    }
+  
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .slide-overlay {
+      height: 400px;
+    }
+  
+    .projects-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    
+    .donors-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .donor-card {
+      padding: 1.5rem;
+    }
+    
+    .testimonials-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .projects-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .slide-content {
+      padding: 2rem 1rem;
+    }
+  }

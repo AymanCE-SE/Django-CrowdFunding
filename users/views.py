@@ -91,13 +91,13 @@ def register(request):
             user.is_active = False  # Deactivate account until confirmed
             user.save()
 
-            # Get current site (this will pass the domain)
-            current_site = get_current_site(request)
+            # Use request.get_host() for the domain
+            domain = request.get_host()
 
             # Create the activation URL manually
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            activation_link = f"http://{current_site.domain}{reverse('users:activate', kwargs={'uid': uid, 'token': token})}"
+            activation_link = f"http://{domain}{reverse('users:activate', kwargs={'uid': uid, 'token': token})}"
 
             subject = "Activate your Crowdfunding account"
             message = render_to_string(
@@ -111,17 +111,7 @@ def register(request):
             user.email_user(subject, message)
 
             messages.success(
-                request, 'Account created successfully! You can now log in.')
-            
-            subject = 'Welcome to Crowdfunding'
-            message = f'Hello {user.username},\n\nThank you for registering on our platform. We are excited to have you on board!\n\nBest regards,\nThe Crowdfunding Team'
-            send_mail(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [user.email],
-                fail_silently=False,
-            
+                request, 'Account created successfully! You can now log in.'
             )
             return redirect("login")
     else:
@@ -146,3 +136,4 @@ def activate(request, uid, token):
         return redirect("login")
     else:
         return render(request, "registration/activation_invalid.html")
+

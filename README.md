@@ -7,11 +7,21 @@ A Django-based crowdfunding platform where users can create and fund projects.
 ## Features
 
 - User authentication and profile management
+- User Profile display
+- User Edit Data and Add Image
+- User delete his profile with password confirmation
+- Rest password
+- Activate accout after Registeration
 - Project creation with optional tags
+- Edit project
+- Only delete project if less that 25% funded
 - Project categories (Education, Technology, etc.)
 - Project donations and ratings
 - Image upload for projects
-- Comment system
+- Comment and reply system
+- Show related projects 
+- Top contributors, featured projects, latest 5 added and top rated projects at home page
+- Static Testimonials
 
 ## Prerequisites
 

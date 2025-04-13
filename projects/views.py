@@ -501,7 +501,7 @@ def home(request):
             projects_count=Count('projects')
         ).order_by('-projects_count'),
         
-        'projects': filtered_projects,  # Add filtered projects to context
+        'projects': filtered_projects,  
         'search_query': search_query,
         'active_category': category_id,
         'active_category_name': active_category_name,
@@ -513,7 +513,6 @@ def home(request):
     }
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Return partial template for AJAX requests
         template = 'projects/components/project_list_partial.html'
     else:
         template = 'home.html'

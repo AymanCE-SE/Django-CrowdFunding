@@ -41,4 +41,6 @@ urlpatterns = [
         next_page='/',
     ), name='logout'),
     # path('accounts/', include('allauth.urls')),
+    path('activate/<uid>/<token>/', views.activate, name='activate'),
+
 ]

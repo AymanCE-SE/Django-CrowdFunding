@@ -42,7 +42,7 @@
           <div class="profile-info">
             <div class="mb-3">
               <i class="fas fa-phone me-2 text-dark"></i>
-              <span>{{ user.phone_number }}</span>
+              <span>{% if user.profile and user.phone_number %}{{ user.phone_number }}{% else %}Not specified{% endif %}</span>
             </div>
             <div class="mb-3">
               <i class="fas fa-map-marker-alt me-2 text-dark"></i>

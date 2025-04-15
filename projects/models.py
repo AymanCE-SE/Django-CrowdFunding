@@ -57,7 +57,7 @@ class Project(models.Model):
     tags = models.ManyToManyField(
         'Tag', 
         related_name='projects',
-        blank=True  # Make tags optional
+        blank=True  
     )
     donated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -246,7 +246,6 @@ class ProjectImage(models.Model):
     def __str__(self):
         return f"Image for {self.project.title}"
 
-############################################################################
 class Donation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='donations', on_delete=models.CASCADE)
@@ -255,7 +254,6 @@ class Donation(models.Model):
     
     def __str__(self):
         return f"{self.user} donated {self.amount} to {self.project}"
-###################################################################################################
 
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

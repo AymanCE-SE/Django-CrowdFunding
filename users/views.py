@@ -95,12 +95,14 @@ def delete_account(request):
 
 
 def register(request):
-    
+    if request.user.is_authenticated:
+        messages.info(request, 'You are already logged in.')
+        return redirect('users:profile')
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False  # Deactivate account until confirmed
+            user.is_active = False  
             user.save()
 
             # Use request.get_host() for the domain

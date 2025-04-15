@@ -34,6 +34,15 @@
                     class="progress-bar bg-success"
                     style="width: {{ project.progress }}%"></div>
                 </div>
+                <div class="rating mb-2">
+                  {% for i in "12345"|make_list %}
+                  <i
+                    class="fas fa-star {% if i <= project.average_rating|floatformat:0 %}text-warning{% else %}text-muted{% endif %}"></i>
+                  {% endfor %}
+                  <small class="text-light"
+                    >({{ project.average_rating|floatformat:1 }})</small
+                  >
+                </div>
                 <div class="funding-info">
                   <span
                     ><i class="fas fa-chart-line me-2"></i>{{ project.progress }}% funded</span

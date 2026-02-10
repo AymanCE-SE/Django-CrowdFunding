@@ -206,8 +206,8 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = os.getenv('ACCOUNT_DEFAULT_HTTP_PROTOCOL', 'http
 SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
         'APP': {
-            'client_id': os.getenv('FACEBOOK_CLIENT_ID', '462110296928018'),
-            'secret': os.getenv('FACEBOOK_CLIENT_SECRET', '4530bac96428f0588d9aeb32bc919879')
+            'client_id': os.getenv('FACEBOOK_CLIENT_ID'),
+            'secret': os.getenv('FACEBOOK_CLIENT_SECRET')
         },
         'AUTH_PARAMS': {
             'auth_type': 'reauthenticate',
@@ -215,8 +215,8 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     'google': {
         'APP': {
-            'client_id': os.getenv('GOOGLE_CLIENT_ID', '433555901243-sgtr3nl68vnrvap4rl4mlivd41p0o7u1.apps.googleusercontent.com'),
-            'secret': os.getenv('GOOGLE_CLIENT_SECRET', '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'),
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
         }
     }
 }

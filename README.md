@@ -1,23 +1,150 @@
 <!-- @format -->
 
-# Crowd Funding Project
+# Crowdfunding Platform - Django Application
 
-A Django-based crowdfunding platform where users can create and fund projects.
+A comprehensive, production-ready crowdfunding platform built with Django 5.2, featuring advanced project management, user authentication, donations, ratings, and community engagement.
 
 ## Features
 
-- User authentication and profile management
-- User Profile display
-- User Edit Data and Add Image
-- User delete his profile with password confirmation
-- Rest password
-- Activate accout after Registeration
-- Project creation with optional tags
-- Edit project
-- Only delete project if less that 25% funded
-- Project categories (Education, Technology, etc.)
-- Project donations and ratings
-- Image upload for projects
+**User Management:**
+- User registration with email verification
+- Social login (Google, Facebook OAuth)
+- Profile management with picture upload
+- Password reset functionality
+- Account deletion with confirmation
+
+**Project Management:**
+- Create, edit, and delete projects
+- Upload multiple project images
+- Project categorization and tagging
+- Project search and filtering
+- Detailed project timeline
+
+**Community Features:**
+- Donate to projects with progress tracking
+- Rate projects (1-5 stars)
+- Leave comments and replies
+- Project reporting system
+- Follow projects
+
+**Additional Features:**
+- Responsive mobile-friendly design
+- Advanced filtering and search
+- Email notifications
+- Admin dashboard
+- Sample data seeding command
+
+## Technology Stack
+
+- **Backend**: Django 5.2 with PostgreSQL/SQLite
+- **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
+- **Authentication**: Django allauth with OAuth 2.0
+- **Image Processing**: Pillow
+- **Server**: Gunicorn + WhiteNoise
+- **Deployment**: Render.com
+- **Admin**: Django admin interface
+
+## Quick Start
+
+### Local Development
+
+1. **Clone and Setup**:
+   ```bash
+   git clone <repo-url>
+   cd Crowd-FundingProject
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   pip install -r requirements.txt
+   ```
+
+2. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+3. **Database Setup**:
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser
+   python manage.py seed_data  # Optional: load sample data
+   ```
+
+4. **Run Server**:
+   ```bash
+   python manage.py runserver
+   # Visit http://localhost:8000
+   ```
+
+### Deployment to Render
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete instructions.
+
+Quick checklist:
+- [ ] Generate secure SECRET_KEY
+- [ ] Set up PostgreSQL database
+- [ ] Configure OAuth credentials
+- [ ] Set environment variables in Render
+- [ ] Deploy and create superuser
+
+## Project Structure
+
+```
+├── crowdfunding/          # Main settings & config
+│   ├── settings.py       # Django settings (uses .env)
+│   ├── urls.py           # URL routing
+│   └── wsgi.py           # WSGI entry point
+├── projects/              # Projects app
+│   ├── models.py         # Project, Donation, Rating models
+│   ├── views.py          # Project views
+│   ├── forms.py          # Project forms
+│   └── management/
+│       └── seed_data.py  # Sample data generator
+├── users/                 # Authentication app
+│   ├── models.py         # CustomUser, Profile models
+│   ├── views.py          # Auth views
+│   └── forms.py          # User forms
+├── static/                # CSS, JS, images
+├── media/                 # User uploads
+├── templates/             # HTML templates
+├── .env                   # Environment variables
+├── .env.example           # Environment template
+├── requirements.txt       # Python dependencies
+├── Procfile               # Render deployment
+├── DEPLOYMENT.md          # Deployment guide
+└── README.md              # This file
+```
+
+## Environment Variables
+
+All settings use environment variables for security. Create `.env` file:
+
+```bash
+# Django
+DEBUG=True
+SECRET_KEY=your-secure-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (PostgreSQL in production)
+DATABASE_URL=sqlite:///db.sqlite3
+
+# Email Configuration
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+
+# OAuth
+GOOGLE_CLIENT_ID=your-google-id
+GOOGLE_CLIENT_SECRET=your-google-secret
+FACEBOOK_CLIENT_ID=your-facebook-id
+FACEBOOK_CLIENT_SECRET=your-facebook-secret
+
+# Security (production)
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+```
+
+See `.env.example` for all available variables.
 - Comment and reply system
 - Show related projects 
 - Top contributors, featured projects, latest 5 added and top rated projects at home page

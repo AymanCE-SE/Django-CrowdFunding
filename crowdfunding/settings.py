@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from django.contrib.messages import constants as messages
+import os
+from dotenv import load_dotenv
+import dj_database_url
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,17 +27,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-dnih9%&d=l53pj3d#ca1ywpc11#vps%#4vtgoey$urw^st+^mv"
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dnih9%&d=l53pj3d#ca1ywpc11#vps%#4vtgoey$urw^st+^mv')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'core.apps.CoreConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,14 +58,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        # Add the account middleware:
-    "allauth.account.middleware.AccountMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = "crowdfunding.urls"
@@ -89,16 +96,24 @@ WSGI_APPLICATION = "crowdfunding.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "crowdfunding_db",
-        "USER": "crowdfunding",
-        "PASSWORD": "123456",
-        "HOST": "localhost",
-        "PORT": "5432",
+# Support both SQLite (local) and PostgreSQL (production)
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -135,9 +150,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -155,12 +173,12 @@ LOGOUT_REDIRECT_URL = "/"
 AUTH_USER_MODEL = "users.CustomUser"
 
 # Email Configuration
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "muh.has.had@gmail.com"
-EMAIL_HOST_PASSWORD = "kfmj pwif wxxi yxza "
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
 MESSAGE_TAGS = {
     messages.ERROR: "danger",
@@ -174,59 +192,40 @@ AUTHENTICATION_BACKENDS = [
 
 SITE_ID = 1
 
+# Application domain used for building absolute URLs in emails
+# Set APP_DOMAIN in your environment (e.g. your-app.onrender.com)
+APP_DOMAIN = os.getenv('APP_DOMAIN', ALLOWED_HOSTS[0] if ALLOWED_HOSTS else 'localhost')
+
+# Default from email
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"noreply@{APP_DOMAIN.split(':')[0]}")
+
+# Protocol used in absolute URLs in emails. Prefer explicit env var, fall back to
+# SECURE_SSL_REDIRECT if set.
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = os.getenv('ACCOUNT_DEFAULT_HTTP_PROTOCOL', 'https' if os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True' else 'http')
+
 SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
         'APP': {
-            'client_id': '462110296928018',
-            'secret': '4530bac96428f0588d9aeb32bc919879'
-            },
+            'client_id': os.getenv('FACEBOOK_CLIENT_ID', '462110296928018'),
+            'secret': os.getenv('FACEBOOK_CLIENT_SECRET', '4530bac96428f0588d9aeb32bc919879')
+        },
         'AUTH_PARAMS': {
             'auth_type': 'reauthenticate',
         },
-            
     },
     'google': {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
         'APP': {
-            'client_id': '1090570282885-im5evf8n7mick9liaieiaiq7rq4iq8gl.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': os.getenv('GOOGLE_CLIENT_ID', '433555901243-sgtr3nl68vnrvap4rl4mlivd41p0o7u1.apps.googleusercontent.com'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET', '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'),
         }
     }
 }
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
-    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
-]
-
-SITE_ID = 1
-
-SOCIALACCOUNT_PROVIDERS = {
-    'facebook': {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
-        'APP': {
-            'client_id': '462110296928018',
-            'secret': '4530bac96428f0588d9aeb32bc919879'
-            },
-        'AUTH_PARAMS': {
-            'auth_type': 'reauthenticate',
-        },
-            
-    },
-    'google': {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
-        'APP': {
-            'client_id': '1090570282885-im5evf8n7mick9liaieiaiq7rq4iq8gl.apps.googleusercontent.com',
-            'secret': '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',
-        }
-    }
-}
+# Security settings for production
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:8000').split(',')
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', 0))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'False') == 'True'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False') == 'True'

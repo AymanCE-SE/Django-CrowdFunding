@@ -23,6 +23,9 @@
     background-size: cover;
     background-position: center;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
   }
   
   .slide-overlay::before {
@@ -35,15 +38,87 @@
       rgba(0, 0, 0, 0.4) 50%,
       rgba(0, 0, 0, 0.1) 100%
     );
+    z-index: 1;
   }
   
   .slide-content {
     position: relative;
+    z-index: 1;
     max-width: 500px;
-    padding: 3rem 1rem;
+    padding: 3rem 2rem;
     color: white;
-    top:140px;
-    left: 60px;
+    margin-left: 4.2rem;
+    animation: slideInLeft 0.8s ease-out;
+  }
+  
+  .slide-content h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    line-height: 1.2;
+  }
+  
+  .slide-content p {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .slide-content .badge {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: inline-block;
+  }
+  
+  .slide-content .progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .slide-content .progress-bar {
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .slide-content .rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .slide-content .btn {
+    transition: all 0.3s ease;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  }
+  
+  .slide-content .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+  }
+  
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .carousel-item.active .slide-content {
+    animation: slideInLeft 0.8s ease-out;
   }
   
   .funding-info {
@@ -583,6 +658,11 @@
     .slide-overlay {
       height: 450px;
     }
+    
+    .slide-content {
+      padding: 2.5rem 1.5rem;
+      margin-left: 2rem;
+    }
   
     .stats-grid {
       grid-template-columns: 1fr;
@@ -591,7 +671,28 @@
   
   @media (max-width: 768px) {
     .slide-overlay {
-      height: 400px;
+      height: 350px;
+      justify-content: center;
+    }
+    
+    .slide-content {
+      padding: 2rem 1.5rem;
+      margin-left: 0;
+      max-width: 100%;
+      text-align: center;
+    }
+    
+    .slide-content h2 {
+      font-size: 1.5rem;
+    }
+    
+    .slide-content p {
+      font-size: 0.9rem;
+    }
+    
+    .funding-info {
+      justify-content: center;
+      flex-wrap: wrap;
     }
   
     .projects-grid {
@@ -615,8 +716,31 @@
     .projects-grid {
       grid-template-columns: 1fr;
     }
+    
+    .slide-overlay {
+      height: 300px;
+    }
   
     .slide-content {
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
+      margin-left: 0;
+    }
+    
+    .slide-content h2 {
+      font-size: 1.25rem;
+    }
+    
+    .slide-content .badge {
+      font-size: 0.75rem;
+    }
+    
+    .funding-info {
+      font-size: 0.85rem;
+      gap: 1rem;
+    }
+    
+    .slide-content .btn {
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
     }
   }

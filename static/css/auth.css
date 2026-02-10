@@ -1,0 +1,24 @@
+/* Small auth styles for social sign-in buttons */
+.btn-google {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #222;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(16,24,40,0.06);
+  transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+  gap: .6rem;
+  text-decoration: none;
+}
+.btn-google:hover,
+.btn-google:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16,24,40,0.12);
+  background: #fafafa;
+  color: #111;
+}
+.btn-google svg { width:20px; height:20px; display:block; }
+.card-title { font-weight:600; }
+.card-body p.text-muted { font-size:0.95rem; }
+
+/* Make the small link below less prominent */
+.card .text-center a { color: #6c757d; font-size:0.95rem; }
